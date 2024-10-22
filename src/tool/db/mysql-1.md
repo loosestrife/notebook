@@ -721,7 +721,7 @@ REVOKE SELECT, INSERT ON mydb.* FROM 'newuser'@'%';
 
 MySQL的远程连接需要两个必要条件：
 
-- 用户的 `Host` 字段设置为 `%`
+- 用户的 `Host` 字段设置为 `%` 或 指定的IP地址
 - MySQL 服务器需要通过 `bind-address` 参数正确配置以监听相应的网络接口
 
 由于MySQL的 `mysql.user` 表中的 `root` 用户的 `Host`属性默认为`localhost`, 意味着该用户只能在从本地访问数据库, 所以需要修改Host属性或者重新 新建一个用户，这里以新建用户为例：
@@ -736,7 +736,7 @@ flush privileges;
 
 ```bash
 SHOW VARIABLES LIKE 'bind_address';
-# 如果结果不是 0.0.0.0 , 则需要修改my.cnf配置文件
+# 如果是 127.0.0.1, 则需要修改my.cnf配置文件
 
 # 查看所有配置文件的路径
 mysql --help | grep my.cnf
@@ -778,8 +778,9 @@ jdbc:mysql://hostname:3306/db_name?useSSL=false&allowPublicKeyRetrieval=true&ser
 #### 解决方法二：更改 MySQL 用户的身份验证插件
 你可以将用户的身份验证插件更改为 `mysql_native_password`，这样就不需要公钥检索。
 
-   ```sql
+   ```bash
    ALTER USER 'your_username'@'%' IDENTIFIED WITH mysql_native_password BY 'your_password';
+
    FLUSH PRIVILEGES;
    ```
 
@@ -789,636 +790,223 @@ jdbc:mysql://hostname:3306/db_name?useSSL=false&allowPublicKeyRetrieval=true&ser
 
 
 
+## MySQL基础及应用
+
+### MySQL数据类型
+
+数据类型选择原则：
+1. **更小的数据类型通常更好**：使用最小且能满足需求的数据类型。
+2. **简单就好**：简单的数据类型操作更快。
+3. **尽量避免NULL**：除非确实需要，否则应该指定列为NOT NULL。
+
+::: info MySQL常用数据类型
+#### 数字类型
+- **整数类型**：
+  - `TINYINT`：1字节，有符号范围为-128到127，无符号范围为0到255。
+  - `SMALLINT`：2字节，有符号范围为-32,768到32,767，无符号范围为0到65,535。
+  - `MEDIUMINT`：3字节，有符号范围为-8,388,608到8,388,607，无符号范围为0到16,777,215。
+  - `INT` (或`INTEGER`)：4字节，有符号范围为-2,147,483,648到2,147,483,647，无符号范围为0到4,294,967,295。
+  - `BIGINT`：8字节，有符号范围为-9,223,372,036,854,775,808到9,223,372,036,854,775,807，无符号范围为0到18,446,744,073,709,551,615。
+
+- **实数类型**：
+  - `FLOAT`：4字节，单精度浮点数。
+  - `DOUBLE` (或`DOUBLE PRECISION`)：8字节，双精度浮点数。
+  - `DECIMAL` (或`NUMERIC`)：用于存储精确的小数值。在MySQL 5.0及以上版本中支持精确计算。指定格式如`DECIMAL(M,D)`，其中`M`是总位数，`D`是小数点后的位数。
+
+在处理财务数据等需要精确度的情况下，应考虑使用`DECIMAL`而不是浮点类型。
+
+#### 字符串类型
+- `CHAR`：固定长度字符串，定义时指定最大长度，不足部分用空格填充。
+- `VARCHAR`：可变长度字符串，节省空间，但需要额外的字节来存储长度信息。
+- `TEXT`：大文本数据，分为`TINYTEXT`、`TEXT`、`MEDIUMTEXT`和`LONGTEXT`，根据不同的大小限制。
+- `BLOB`：二进制大对象，用于存储大量二进制数据，同样分为`TINYBLOB`、`BLOB`、`MEDIUMBLOB`和`LONGBLOB`。
+
+对于非常短的列，`CHAR`可能比`VARCHAR`更有效率，因为`VARCHAR`需要额外的空间来存储长度信息。
+
+#### 时间和日期类型
+- `DATE`：仅日期，格式为`YYYY-MM-DD`。
+- `TIME`：仅时间，格式为`HH:MM:SS`。
+- `DATETIME`：日期和时间，格式为`YYYY-MM-DD HH:MM:SS`，占用8个字节。
+- `TIMESTAMP`：类似于`DATETIME`，但是值的范围较小（从'1970-01-01 00:00:01' UTC到'2038-01-19 03:14:07' UTC），占用4个字节，并且可以自动更新为当前时间戳。
+
+`TIMESTAMP`和`DATETIME`都可用于存储日期和时间，但`TIMESTAMP`会受时区影响并具有特殊的行为。
+
+#### 枚举和集合类型
+- `ENUM`：枚举类型，列只能有一个枚举列表中的值。
+- `SET`：集合类型，列可以有零个或多个SET成员。当插入一组值时，这些值被转换为一个整数，并以二进制格式存储。
+:::
 
 
-## MySql常用数据类型
-
-| 常用数据类型 | 大小（bytes） | 说明                                                         |
-| :----------: | :-----------: | ------------------------------------------------------------ |
-|     int      |       4       | 整型 （-2 147 483 648，2 147 483 647）±21亿                  |
-|    double    |       8       | 浮点型，例如double(5,2)表示最多5位，其中必须有2位小数，即最大值为 999.99 |
-|     char     |     0-255     | 固定长度字符串类型； `char(10)   'aaa' ` 占10个字符的位置    |
-|   varchar    |    0-65535    | 可变长度字符串类型； `varchar(10)  'aaa'`占3字符             |
-|     text     |    0-65535    | 字符串类型，比如小说信息                                     |
-|     blob     |    0-65535    | 字节类型，保存文件信息(视频，音频，图片)                     |
-|     date     |       3       | 日期类型，格式为：yyyy-MM-dd                                 |
-|     time     |       3       | 时间类型，格式为：hh:mm:ss                                   |
-|  timestamp   |       4       | 时间戳类型 yyyy-MM-dd hh:mm:ss 会自动赋值                    |
-|   datetime   |       8       | 日期时间类型 yyyy-MM-dd hh:mm:ss                             |
-
-<br/>
-
-MySQL支持的数据类型非常多，选择正确的数据类型对于获得高性能至关重要。
-
-不管存储哪种类型的数据，下面几个简单的原则都有助于做出更好的选择。
-
-```sql
-1. 更小的通常更好。
-一般情况下，应该尽量使用可以正确存储数据的最小数据类型. 
-更小的数据类型通常更快，因为它们占用更少的磁盘、内存和CPU缓存，并且处理时需要的CPU周期也更少。
-(如果无法确定哪个数据类型是最好的，就选择你认为不会超过范围的最小类型。)
-
-2. 简单就好
-简单数据类型的操作通常需要更少的CPU周期。
-例如，整型比字符操作代价更低，因为字符集和校对规则（排序规则）使字符比较比整型比较更复杂。
-这里有两个例子：
-一个是应该使用MySQL内建的类型而不是字符串来存储日期和时间，
-另外一个是应该用整型存储IP地址
-
-3. 尽量避免NULL
-很多表都包含可为NULL （空值）的列，即使应用程序并不需要保存NULL 也是如此，这是因为可为NULL 是列的默认属性 。
-通常情况下最好指定列为 NOT NULL ，除非真的需要存储NULL 值。
-通常把可为NULL 的列改为NOT NULL 带来的性能提升比较小，所以（调优时）没有必要首先在现有schema中查找并修改掉这种情
-况，除非确定这会导致问题。但是，如果计划在列上建索引，就应该尽量避免设计成可为NULL的列。
-
-```
-
-<br/>
-
-
-
-```shell
-DATETIME 和TIMESAMP 列都可以存储相同类型的数据：时间和日期，精确到秒。
-然而TIMESTAMP 只使用DATETIME 一半的存储空间，并且会根据时区变化，具有特殊的自动更新能力。
-另一方面，TIMESTAMP 允许的时间范围要小得多，有时候它的特殊能力会成为障碍。
-
-MySQL为了兼容性支持很多别名，例如INTEGER、BOOL ，以及NUMERIC 。
-它们都只是别名。这些别名可能令人不解，但不会影响性能。
-如果建表时采用数据类型的别名，然后用SHOW CREATE TABLE 检查，会发现MySQL报告的是基本类型，而不是别名。
-```
-
-<br/>
-
-### 1) 数字类型
-
-有两种类型的数字：整数（whole number）和实数（real number）
-
-<br/>
-
-
-
-**整数类型**：TINYINT，SMALLINT，MEDIUMINT，INT，BIGINT 。分别使用 8，16，24，32，64位存储空间
+下面是一个使用枚举（`ENUM`）和集合（`SET`）示例：
 
 ```sql
-整数类型有可选的UNSIGNED 属性，表示不允许负值，这大致可以使正数的上限提高一倍。
-例如 TINYINT UNSIGNED 可以存储的范围是0～255，而 TINYINT 的存储范围是 −128～127。
-
-有符号和无符号类型使用相同的存储空间，并具有相同的性能，因此可以根据实际情况选择合适的类型
-
-你的选择可以决定MySQL是怎么在内存和磁盘中保存数据的。
-然而，整数计算一般使用64位的BIGINT 整数，即使在32位环境也是如此（一些聚合函数是例外，它们使用 DECIMAL 或 DOUBLE 进行计算）
-
-
-MySQL可以为整数类型指定宽度，例如INT（11） ，对大多数应用这是没有意义的：
-它不会限制值的合法范围，只是规定了MySQL的一些交互工具（例如MySQL命令行客户端）用来显示字符的个数。
-对于存储和计算来说，INT（1） 和INT（20） 是相同的。
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL,
+    password CHAR(64) NOT NULL,  -- 假设密码经过哈希处理后长度为64字符
+    email VARCHAR(100),
+    gender ENUM('M', 'F', 'O') DEFAULT 'O',  -- 性别：男(M)，女(F)，其他(O)
+    hobbies SET('Reading', 'Sports', 'Music', 'Travel', 'Cooking')  -- 兴趣爱好
+);
 ```
 
-<br/>
-
-
-
-**实数类型**：实数是带有小数部分的数字。
-
-然而，它们不只是为了存储小数部分；也可以使用DECIMAL 存储比BIGINT 还大的整数。MySQL既支持精确类型，也支持不精确类型。
+- `gender` 字段是一个枚举类型，只能取三个预定义值之一：'M' (男性), 'F' (女性), 或 'O' (其他)。默认值设置为 'O'。
+- `hobbies` 字段是一个集合类型，可以包含多个预定义的兴趣爱好选项。例如，如果一个用户喜欢阅读和旅行，那么该字段可以存储为 `'Reading,Travel'`。
 
 ```sql
-FLOAT 和 DOUBLE 类型支持使用标准的浮点运算进行近似计算。
--- 如果需要知道浮点运算是怎么计算的，则需要研究所使用的平台的浮点数的具体实现。
+-- 插入数据示例
+INSERT INTO users (username, password, email, gender, hobbies)
+VALUES ('john_doe', 'hashed_password', 'john@example.com', 'M', 'Sports,Music');
 
-DECIMAL 类型用于存储精确的小数。在MySQL 5.0和更高版本，DECIMAL 类型支持精确计算。
--- MySQL 4.1以及更早版本则使用浮点运算来实现DECIAML 的计算，这样做会因为精度损失导致一些奇怪的结果。
--- 在这些版本的MySQL中，DECIMAL 只是一个“存储类型”。
+-- 查询所有男性用户的兴趣爱好：
+SELECT username, hobbies FROM users WHERE gender = 'M';
 
-因为CPU不支持对DECIMAL 的直接计算，所以在MySQL 5.0以及更高版本中，MySQL服务器自身实现了DECIMAL 的高精度计算。
-相对而言，CPU直接支持原生浮点计算，所以浮点运算明显更快。
+-- 查询对阅读感兴趣的用户：
+SELECT username FROM users WHERE FIND_IN_SET('Reading', hobbies) > 0;
 ```
+`FIND_IN_SET` 是 MySQL 中的一个字符串函数，它用于在逗号分隔的字符串列表中查找特定的值。这个函数对于处理存储为集合（`SET`）类型的数据非常有用，因为它可以用来检查某个值是否存在于一个以逗号分隔的字符串列表中。
 
-<br/>
+::: info FIND_IN_SET()函数
+`FIND_IN_SET(str, strlist)`
 
-```sql
+- `str`：要查找的字符串。
+- `strlist`：由逗号分隔的字符串列表。
 
-有多种方法可以指定浮点列所需要的精度，这会使得MySQL悄悄选择不同的数据类型，或者在存储时对值进行取舍。
-这些精度定义是非标准的，所以我们建议只指定数据类型，不指定精度。
-
-浮点类型在存储同样范围的值时，通常比DECIMAL 使用更少的空间。
-FLOAT 使用4个字节存储。DOUBLE 占用8个字节，相比FLOAT有更高的精度和更大的范围。和整数类型一样，能选择的只是存储类型；
-
-
-MySQL使用 DOUBLE 作为内部浮点计算的类型。
-因为需要额外的空间和计算开销，所以应该尽量只在对小数进行精确计算时才使用 DECIMAL -- 例如存储财务数据。
-
-但在数据量比较大的时候，可以考虑使用 BIGINT 代替 DECIMAL ，将需要存储的货币单位根据小数的位数乘以相应的倍数即可。
--- 假设要存储财务数据精确到万分之一分，则可以把所有金额乘以一百万，然后将结果存储在 BIGINT 里，
--- 这样可以同时避免 浮点存储计算不精确 和 DECIMAL 精确计算代价高 的问题。
-
-```
+返回值：
+- 如果 `str` 存在于 `strlist` 中，则返回 `str` 在 `strlist` 中的位置（从1开始计数）。
+- 如果 `str` 不在 `strlist` 中，则返回0。
+- 如果 `strlist` 或 `str` 为空字符串，或者 `strlist` 不是有效的逗号分隔列表，则返回0。
+:::
 
 
 
-<br/>
-
-### 2) 字符串类型
-
-VARCHAR  和 CHAR 是两种最主要的字符串类型。
-
-不幸的是，很难精确地解释这些值是怎么存储在磁盘和内存中的，因为这跟存储引擎的具体实现有关。
-
-<br/>
-
-先看看 InnoDB 或者MyISAM 通常 怎么存储 VARCHAR 和 CHAR 值在磁盘上 ：
-
-```sql
-VARCHAR 类型用于存储可变长字符串，是最常见的字符串数据类型。
-它比定长类型更节省空间，因为它仅使用必要的空间（例如，越短的字符串使用越少的空间）。
--- 有一种情况例外，如果MySQL表使用ROW_FORMAT=FIXED 创建的话，每一行都会使用定长存储，这会很浪费空间。
-
-VARCHAR 需要使用1或2个额外字节记录字符串的长度：
--- 如果列的最大长度小于或等于255字节，则只使用1个字节表示，否则使用2个字节。
--- 假设采用latin1字符集，一个VARCHAR（10） 的列需要11个字节的存储空间。
--- VARCHAR（1000） 的列则需要1002个字节，因为需要2个字节存储长度信息。
+### 数据库备份与恢复
 
 
-VARCHAR 节省了存储空间，所以对性能也有帮助。
-但是，由于行是变长的，在UPDATE 时可能使行变得比原来更长，这就导致需要做额外的工作。
-如果一个行占用的空间增长，并且在页内没有更多的空间可以存储，在这种情况下，不同的存储引擎的处理方式是不一样的。
-例如，MyISAM会将行拆成不同的片段存储，InnoDB则需要分裂页来使行可以放进页内。其他一些存储引擎也许从不在原数据位置更新数据
+MySQL数据库的备份与恢复是数据库管理中的重要组成部分，它确保了数据的安全性和完整性。下面我将详细介绍如何进行MySQL数据库的备份和恢复。
 
+**数据备份**
 
-下面这些情况下使用 VARCHAR 是合适的：
-1. 字符串列的最大长度比平均长度大很多；
-2. 列的更新很少，所以碎片不是问题；
-3. 使用了像 UTF-8 这样复杂的字符集，每个字符都使用不同的字节数进行存储。
+#### 1. 使用mysqldump命令
+`mysqldump` 是一个非常强大的命令行工具，用于创建MySQL数据库的逻辑备份。它可以导出整个数据库、单个表或特定的数据集。
 
-```
+- **全库备份**：
+  ```sh
+  mysqldump -u username -p database_name > backup_file.sql
+  ```
+  这里 `username` 是你的数据库用户名，`database_name` 是要备份的数据库名称，`backup_file.sql` 是输出的SQL文件名。
 
-
-
-<br/>
-
-
-
-```SQL
-CHAR 类型是定长的：MySQL总是根据定义的字符串长度分配足够的空间。当存储CHAR 值时，MySQL会删除所有的末尾空格
-
-CHAR 适合存储很短的字符串，或者所有值都接近同一个长度。例如，
--- 1. CHAR 非常适合存储密码的MD5 值，因为这是一个定长的值。
--- 2. 对于经常变更的数据，CHAR 也比VARCHAR 更好，因为定长的CHAR 类型不容易产生碎片。
--- 3. 对于非常短的列，CHAR 比VARCHAR 在存储空间上也更有效率。
---    例如用CHAR（1） 来存储只有Y和N的值，如果采用单字节字符集只需要一个字节，
---    但是VARCHAR（1） 却需要两个字节，因为还有一个记录长度的额外字节。
-```
-
-
-
-
-
-
-
-<br/>
-
-### 3) enum&set
-
-
-
-
-
-
-
-<br/>
-
-
-
-### 4) 时间和日期
-
-
-
-
-
-<br/>
-
-
-
-## 数据库备份与恢复
-
-- 备份
-
-  ```shell
-  -- 直接在cmd命令下（配置环境变量，如果没有配置，那么就是在MySQL的bin目录下）
-  mysqldump -uroot -p dbName>path\dbName.sql
+- **指定表备份**：
+  ```sh
+  mysqldump -u username -p database_name table1 table2 > tables_backup.sql
   ```
 
-- 恢复
-
-  ```shell
-  -- 连接上MySQL服务器
-  mysql -uroot -p
-  
-  -- 选中数据库
-  use dbName;
-  
-  -- 恢复数据
-  source path\dbName.sql;
+- **包含数据库结构（不包括数据）**：
+  ```sh
+  mysqldump -u username -p --no-data database_name > structure_only.sql
   ```
 
-
-
-
-
-<br/>
-
-
-
-## 四 数据库设计
-
-### 1. 数据完整性
-
-数据完整性是数据库制定的了一些规范，是为了防止用户错误的输入（防止数据库出现错误的数据）
-
-- **数据库的完整性**：保证存放到数据库中的数据是有效的,
-
-  => 在创建表时给表中添加约束
-
-  <br/>
-
-- **实体完整性**：标识每一行数据不重复
-
-  实体完整性指的是数据库表中存在记录应该不重复出现，是唯一的。
-
-  实体：即表中的一行(一条记录)代表一个实体（entity）
-
-  约束类型：*主键约束（primary key）*、 *唯一约束 (unique)* 、 *自动增长列 (auto_increment)* 
-
-  <br/>
-
-- **域完整性**：限制此单元格的数据正确
-
-  域完整性是指数据库表中的每一个字段都应该有自己的约束。这种约束大多数是数据类型，这句话的意思是表中的每一列都应该有自己的数据类型，还有一些关键字也可以约束。
-
-  域完整性约束：数据类型 、非空约束（not null）、 默认值约束(default）
-
-  <br/>
-
-- **引用完整性（参照完整性）**：指外键
-
-  外键约束：FOREIGN KEY
-
-<br/>
-
-
-
-常见约束：
-
-| 约束            | 说明                               |
-| --------------- | ---------------------------------- |
-| null / not null | 字段是否可以为空                   |
-| default         | 如果一个字段没有值，则使用默认值   |
-| auto_increment  | 字段值从1开始，每次递增1，不会重复 |
-| primary key     | 定义列为主键                       |
-| unique          | 唯一键：不能重复，但可以为空       |
-| comment         | 注释信息                           |
-
-<br/>
-
-语法示例：
-
-**主键约束（primary key）**：
-
-```SQL
-# 1. 在 CREATE TABLE 语句中，通过 PRIMARY KEY 关键字来指定主键
-<字段名> <数据类型> PRIMARY KEY [默认值]
-
-# 2. 或者是在定义完所有字段之后指定主键：
-[CONSTRAINT <约束名>] PRIMARY KEY [字段名]
-
-# 3. 在创建表时设置联合主键（所谓的联合主键，就是这个主键是由一张表中多个字段组成的）
-PRIMARY KEY [字段1，字段2，…,字段n]
-
-# 4. 在修改表时添加主键约束
-ALTER TABLE <数据表名> ADD PRIMARY KEY(<字段名>);
-
-# 删除主键约束
-ALTER TABLE <数据表名> DROP PRIMARY KEY;
-```
-
-<br/>
-
-
-
-**唯一约束 (unique)**：
-
-```SQL
-# 1. 在创建表时设置唯一约束
-<字段名> <数据类型> UNIQUE
-
-# 2. 在修改表时添加唯一约束
-ALTER TABLE <数据表名> ADD CONSTRAINT <唯一约束名> UNIQUE(<列名>);
-
-# 删除唯一约束
-ALTER TABLE <表名> DROP INDEX <唯一约束名>;
-```
-
-<br/>
-
-
-
-**自动增长列 (auto_increment)**：
-
-```SQL
-# 1. 给字段添加 AUTO_INCREMENT 属性来实现主键自增长
-字段名 数据类型 AUTO_INCREMENT
-
-# 2. 指定自增字段初始值
-CREATE TABLE tb_student2 (
-    id INT NOT NULL AUTO_INCREMENT,
-    name VARCHAR(20) NOT NULL,
-    PRIMARY KEY(ID)
-)AUTO_INCREMENT=100;
-```
-
-- 默认情况下，AUTO_INCREMENT 的初始值是 1，每新增一条记录，字段值自动加 1。
-- 一个表中只能有一个字段使用 AUTO_INCREMENT 约束，且该字段必须有唯一索引，以避免序号重复（即为主键或主键的一部分）
-- AUTO_INCREMENT 约束的字段必须具备 NOT NULL 属性。
-- AUTO_INCREMENT 约束的字段只能是整数类型（TINYINT、SMALLINT、INT、BIGINT 等）。
-- AUTO_INCREMENT 约束字段的最大值受该字段的数据类型约束，如果达到上限，AUTO_INCREMENT 就会失效。
-
-<br/>
-
-
-
-**外键约束（foreign key）**: 
-
-```SQL
-[CONSTRAINT <外键名>] FOREIGN KEY 字段名 [，字段名2，…] REFERENCES <主表名> 主键列1 [，主键列2，…]
-#例：
-constraint fk_score_sid foreign key(sid) references student(id) );
-
-# 删除外键约束
-ALTER TABLE <表名> DROP FOREIGN KEY <外键约束名>;
-```
-
-使用外键会影响效率：
-
-在插入子行的数据的时候，会去父表中查询。在删除父表中的数据的时候，会去子表中查询数据是否被使用。
-
-在工作中，一般很少使用外键。外键虽然可以保证我们数据的正确性，但是会比较大程度上的影响效率。
-
-
-
-<br/>
-
-
-
-###  2. 三大范式
-
-- 第一范式：指每一列保持 <span style='color:red;background:yellow;font-size:文字大小;font-family:字体;'>**原子性**</span>（每一列都是不可分割的基本数据，同一列中不能有多个值）每一个属性不可再分
-
-  ```sql
-  /* 所谓第一范式（1NF)是指在关系模型中，对域添加的一个规范要求，所有的域都应该是原子性的，
-  	即数据库表的每一列都是不可分割的原子数据项，而不能是集合，数组，记录等非原子数据项。
-  	即当实体中的某个属性有多个值时，必须将其拆分为不同的属性。
-  	
-  	在符合第一范式（1NF)表中的每个域值只能是实体的一个属性或一个属性的一部分。
-  	简而言之，第一范式就是无重复的域。
-  	
-  	需要注意的是，在任何一个关系型数据库中，第一范式（1NF）是对关系模式的设计基本要求，一般设计时都必须满足第一范式(1NF)。
-  	不过有些关系模型中突破了1NF的限制，这种称为非1NF的关系模型。
-  	换句话说，是否必须满足1NF的最低要求，主要依赖于所使用的关系模型。
-  	不满足1NF的数据库就不是关系数据库。满足1NF的表必须要有主键且每个属性不可再分
-  
+- **压缩备份**：
+  可以使用管道将输出直接传递给压缩工具，如gzip。
+  ```sh
+  mysqldump -u username -p database_name | gzip > backup_file.sql.gz
   ```
 
-  <br/>
-
-- 第二范式：确保数据库表中的每一列都和主键相关，而不能只与主键的某一部分相关（主要针对联合主键而言）
-
-  即指记录的**唯一性**。要求数据库表中的每个实例或行必须可以被唯一地区分。
-
-  ```sql
-  /*第二范式（2NF）要求数据库表中的每个实例或行必须可以被唯一地区分。
-   为实现区分通常需要为表加上 一个列，以存储各个实例的唯一标识。这个唯一属性列被称为主关键字或主键、主码。 
+- **排除某些表**：
+  如果需要备份整个数据库但排除一些特定的表，可以使用 `--ignore-table` 选项。
+  ```sh
+  mysqldump -u username -p --ignore-table=database_name.table_to_ignore database_name > partial_backup.sql
   ```
 
-  <br/>
+- **增量备份**：
+  对于大型数据库，可能需要考虑增量备份。这通常涉及到二进制日志 (binary logs) 的复制。你可以设置 `binlog_format=ROW` 和启用二进制日志记录来支持增量备份。
 
-- 第三范式：属性不依赖于其它非主属性 [ 消除传递依赖 ]。即指**字段不要冗余**。
+#### 2. 物理备份
+对于更大的数据库或者对性能有更高要求的情况，可以使用物理备份工具如 `Percona XtraBackup` 或者 MySQL Enterprise Backup。这些工具能够提供在线热备份，并且备份速度更快。
 
+**数据恢复**
+
+#### 1. 从逻辑备份恢复
+恢复逻辑备份时，你只需要执行之前备份生成的SQL脚本。
+
+- **全库恢复**：
+  ```sh
+  mysql -u username -p database_name < backup_file.sql
   ```
-  设R是一个满足第一范式条件的关系模式，X是R的任意属性集，如果X非传递依赖于R的任意一个候选关键字，称R满足第三范式，简记为3NF. 
-  
-  满足 第三范式（3NF）必须先满足第二范式（2NF）。
-  
-  第三范式（3NF）要求一个数据库表中不包含已在其它表中已包含的非主关键字信息。 
+
+- **创建新数据库并恢复**：
+  如果数据库不存在，你需要先创建数据库，然后恢复。
+  ```sh
+  mysql -u username -p -e "CREATE DATABASE new_database_name;"
+  mysql -u username -p new_database_name < backup_file.sql
   ```
 
-<br/>
+- **解压后再恢复**：
+  如果备份是经过压缩的，需要先解压再恢复。
+  ```sh
+  gunzip < backup_file.sql.gz | mysql -u username -p database_name
+  ```
 
-注：关系实质上是一张二维表，其中每一行是一个元组，每一列是一个属性 
+::: info source命令
+使用 `SOURCE` 命令是一种非常直接和方便的方式来恢复 MySQL 数据库，特别适用于逻辑备份（如由 `mysqldump` 创建的备份）。
 
-第二范式（2NF）和第三范式（3NF）的概念很容易混淆，区分它们的关键点在于，
+假设你有一个名为 `mydatabase_backup.sql` 的备份文件，你可以按照以下步骤来恢复数据库：
 
-2NF：非主键列是否完全依赖于主键，还是依赖于主键的一部分；
+1. **启动 MySQL 命令行客户端**：
+   ```sh
+   mysql -u username -p
+   ```
+   这将提示你输入密码。如果需要连接到特定的主机或端口，可以添加相应的选项，例如：
+   ```sh
+   mysql -h hostname -P port -u username -p
+   ```
 
-3NF：非主键列是直接依赖于主键，还是直接依赖于非主键列。
+2. **选择数据库**（如果需要恢复到现有数据库中）：
+   如果你的备份文件只包含数据而不包含创建数据库的语句，你需要先选择目标数据库：
+   ```sql
+   USE target_database_name;
+   ```
 
-<br/>
+3. **执行 `SOURCE` 命令**：
+   使用 `SOURCE` 命令来执行备份文件中的所有 SQL 语句：
+   ```sql
+   SOURCE /path/to/mydatabase_backup.sql;
+   ```
+   注意路径必须是 MySQL 客户端所在服务器上的有效路径。如果你是从远程客户端连接到 MySQL 服务器，那么路径应该是 MySQL 服务器上的路径。
 
-在实际的工作中，要不要去冗余字段呢？
+4. **检查结果**：
+   执行完成后，可以通过查询数据库来验证数据是否正确恢复。
 
-> 适当的字段冗余可以帮助我们提高查询的效率，但是会影响到增删改的效率。
->
-> 那么我们冗余字段需要看具体的业务场景，假如在这个业务场景中，
->
-> <span style='color:red;background:yellow;font-size:文字大小;font-family:字体;'>**查询的需求远大于增删改的需求，我们可以考虑适当的去冗余数据**</span>；
->
-> 假如增删改的需求比查询的需求比重要高，那么这个时候就不应该冗余数据。
->
-> 
->
-> 冗余字段的设计：反范式化设计。
+#### 注意事项
 
+- 确保你有足够的权限来执行 `SOURCE` 命令以及脚本中的 SQL 语句。
+- 如果备份文件很大，可能需要一些时间来完成恢复过程。
+- 在执行 `SOURCE` 之前，确保目标数据库已经存在（除非备份文件本身包含了创建数据库的语句）。
+- 如果遇到错误，可以查看 MySQL 的错误日志来获取更多信息。
+:::
 
 
-<br/>
+#### 2. 从物理备份恢复
+物理备份的恢复过程依赖于使用的工具，通常涉及准备步骤和应用二进制日志。例如，使用 Percona XtraBackup 时：
 
+- **准备备份**：
+  ```sh
+  xtrabackup --prepare --target-dir=/path/to/backup
+  ```
 
+- **停止MySQL服务**：
+  在恢复之前，需要停止MySQL服务。
 
-### 3. 多表设计
+- **移动数据文件**：
+  将备份的数据文件移动到MySQL数据目录中。
 
+- **启动MySQL服务**：
+  启动MySQL服务后，根据情况应用二进制日志以确保数据的一致性。
 
 
 
 
-<br/>
 
 
 
-## 五 事务Transaction
-
-**事务（Transaction）**：是由一系列对数据库中数据进⾏访问（查询）与更新（增删改）的操作所组成的⼀个程序执行逻辑单元
-
-这些操作，要么都成功，要么都不成功。
-
-
-
-```SQL
--- 事务相关命令：
-begin;                -- 开始，还可以使用下列语法：
-start transaction; 
-commit;               -- 提交：使得当前的修改确认
-rollback;             -- 回滚：使得当前的修改被放弃
-```
-
-<br/>
-
-
-
-### 1. 事务的ACID特性
-
-- **原子性（Atomicity）**：事务必须是⼀个原子的操作序列单元
-
-  事务中包含的各项操作在⼀次执⾏过程中，只允许出现两种状态之一：（1）全部执行成功 （2）全部执行失败 
-
-  事务开始后所有操作，要么全部做完，要么全部不做，不可能停滞在中间环节。
-
-  事务执⾏过程中出错， 会回滚到事务开始前的状态，所有的操作就像没有发⽣一样。
-
-  也就是说事务是⼀个不可分割的整体，就像化学中学过的原子，是物质构成的基本单位。
-
-  <br/>
-
-  
-
-- **⼀致性（Consistency）** ：一个事务在执⾏之前和执行之后，数据库都必须处于⼀致性状态。
-
-   即事务必须是数据库从一个一致性状态到另外一个一致性状态。
-
-   比如：如果从A账户转账到B账户，不可能因为A账户扣了钱，⽽B账户没有加钱（两个账号的总金额要保持一致状态）
-
-   <br/>
-
-   
-
-- **隔离性（Isolation）** ：在并发环境中，并发的事务是互相隔离的。
-
-  也就是说，不同的事务并发操作相同的数据时，每个事务都有各自完整的数据空间。 
-
-  ⼀个事务内部的操作及使用的数据对其它并发事务是隔离的，并发执行的各个事务是不能互相干扰的。 
-
-  在事务中，有隔离级别的定义，不同的隔离级别有不同的影响的程度。
-
-  <br/>
-
-  
-
-- **持久性（Durability）**：事务⼀旦提交后，数据库中的数据必须被永久的保存下来。
-
-  即使服务器系统崩溃或服 务器宕机等故障。只要数据库重新启动，那么一定能够将其恢复到事务成功结束后的状态
-
-
-
-<br/>
-
-
-
-### 2. 事务的并发问题
-
--- 详情：[MySQL事务并发问题](https://blog.csdn.net/drizzletowne/article/details/120928779?app_version=4.17.0&code=app_1562916241&uLinkId=usr1mkqgl919blen)
-
-- **脏读（Dirty Read）**：一个事务读取到了另外一个事务还没提交的数据。
-
-  事务A读取了事务B更新但未提交的数据（脏数据） 
-
-  *脏数据*：是指事务对缓冲池中行记录的修改，并且还没有被提交（commit）
-
-  脏读发生的条件是需要事务的隔离级别为 `READ UNCOMMITTED`
-
-  <br/>
-
-  
-
-- **不可重复读（Nonrepeatable Read）**：在同一个事务内，针对同一个数据，前后读取的数据不一样
-
-  可能原因：在同一个事务内，读取到了别的事务修改的数据。如：事务 A 多次读取同一数据，事务 B 在事务A 多次读取的 过程中，对数据做了更新并提交，导致事务A多次读取同一数据时，结果不一致。 
-
-  
-
-  *不可重复读和脏读的区别* 是：脏读是读到未提交的数据，而不可重复读读到的却是已经提交的数据
-
-  有时候，不可重复读的问题是可以接受的，因为其读到的是已经提交的数据，本身并不会带来很大的问题
-
-  <br/>
-
-  
-
-- **幻读（Phantom Read）**：在一个事务内，读取数据记录条数前后不一致 ，
-
-  可能原因：在一个事务内，读取到了别的事务插入（删除）的数据
-  
-  即在重复查询的过程中，数据发⽣了量的变化（行数多了或少了）如：
-  
-  1. 事务 A 里有一个条件查询的语句 `select * from student where age > 10`，假设查到了 10 行数据；
-  2. 然后事务 B 往里面加入了一批数据 （或者删除了一些数据）
-  3. 事务 A 再查的用条件查询语句查询的时候，发现查到了15条 （如果B执行了删除，那么将会少于10条数据）
-
-<br/>
-
-
-
-### 3. 事务的隔离级别
-
-❑ Read Uncommitted（读未提交）：最低的隔离级别，也是唯一能读到脏数据的隔离级别
-
-❑ Read Committed（读已提交）：只能读取已经提交的数据、解决了脏读问题，但是还是解决不了可重复读问题
-
-❑ Repeatable Read（可重复读）：保证在事务处理理过程中，多次读取同一个数据时，该数据的值是一致的
-
-❑ Serializable（顺序读 / 可串行化 / 序列化）：最严格的事务隔离级别、事务只能一个接一个地处理，不能并发
-
-<br/>
-
-> <span style='color:red;background:yellow;font-size:文字大小;font-family:字体;'>**read uncommitted 有脏读、不可重复读、虚幻读的问题**</span> 、read uncommitted 是最不安全的隔离级别。
->
-> <span style='color:red;background:yellow;font-size:文字大小;font-family:字体;'>**read committed 隔离级别没有 脏读的问题，但是有不可重复读和虚幻读的问题。**</span> 
->
-> <span style='color:red;background:yellow;font-size:文字大小;font-family:字体;'>**repeatable read 没有脏读的问题，没有不可重复读的问题，也没有虚幻读的问题。这个隔离级别也是MySQL默认的隔离级别。**</span>
->
-> >说明：只有在MySQL中，repeatable read 这种隔离级别没有虚幻读的问题。因为MySQL的存储引擎InnoDB通过MVCC（多版本并发控制） 解决了可重复读隔离级别下虚幻读的问题。
->
-> <span style='color:red;background:yellow;font-size:文字大小;font-family:字体;'>**串行化这种隔离级别没有 脏读、不可重复读、虚幻读的问题。但是有效率的问题。**</span> 
->
-> 串行化这种隔离级别指的是，数据库在这种隔离级别下，会一个事务、一个事务的先后执行，会严格保证事务的先后顺序，不存在多个事务同时执行情况，这种隔离级别没有事务的隔离问题，当然也没有上面的安全性问题。
-
-<br/>
-
-
-
-不同事务隔离级别下的不同的问题总结：
-
-| 隔离级别 \ 并发问题 | 脏读 | 不可重复读 |      虚幻读      |
-| ------------------- | :--: | :--------: | :--------------: |
-| read uncommitted    |  √   |     √      |        √         |
-| read committed      |  X   |     √      |        √         |
-| repeatable read     |  X   |     X      | X(在MySQL下没有) |
-| serializable        |  X   |     X      |        X         |
-
-
-
-<br/>
-
-`InnoDB` offers all four transaction isolation levels described by the SQL:1992 standard: 
-
-[`READ UNCOMMITTED`](https://dev.mysql.com/doc/refman/5.7/en/innodb-transaction-isolation-levels.html#isolevel_read-uncommitted), [`READ COMMITTED`](https://dev.mysql.com/doc/refman/5.7/en/innodb-transaction-isolation-levels.html#isolevel_read-committed), [`REPEATABLE READ`](https://dev.mysql.com/doc/refman/5.7/en/innodb-transaction-isolation-levels.html#isolevel_repeatable-read), and [`SERIALIZABLE`](https://dev.mysql.com/doc/refman/5.7/en/innodb-transaction-isolation-levels.html#isolevel_serializable). 
-
-The default isolation level for `InnoDB` is [`REPEATABLE READ`](https://dev.mysql.com/doc/refman/5.7/en/innodb-transaction-isolation-levels.html#isolevel_repeatable-read).
-
-InnoDB存储引擎默认支持的隔离级别是 `REPEATABLE READ`，但是与标准SQL不同的是，InnoDB存储引擎在`REPEATABLE READ`事务隔离级别下，使用 `Next-Key Lock ` 锁的算法，因此避免了幻读的产生
-
-MySQL数据库中的InnoDB和Falcon存储引擎通过MVCC（Multi-Version Concurrent Control，多版本并发控制）机制解决了可重复读隔离级别下虚幻读的问题。
-
-需要注意的是，多版本只是解决不可重复读问题，而加上间隙锁（也就是它这里所谓的并发控制）才解决了幻读问题。
-
-
-
-<br/>
 
