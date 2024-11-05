@@ -17,10 +17,23 @@ title: Java环境安装
 # 安装完成后我们测试一下是否正确完成安装
 java -version
 ```
+非安装包直接解压配置环境变量即可
 
 ## 配置环境变量
 
-Windows中直接编辑环境变量即可，
+::: info Windows环境变量
+1. 新建`JAVA_HOME`系统环境变量，值为jdk所在目录，如`D:\Develop\jdk\jdk-21.0.5`
+2. 编辑 `Path` 环境变量，新建 `%JAVA_HOME%\bin`, `%JAVA_HOME%\jre\bin`
+3. (可选) 新建 `CLASSPATH`，值为 `.;%JAVA_HOME%\lib\tools.jar;%JAVA_HOME%\lib\dt.jar`
+
+配置完可以通过下列CMD命令查看结果：
+```bash
+java -version
+
+echo %JAVA_HOME%
+```
+:::
+
 MacOS中配置JAVA_HOME和环境变量的方法如下：
 
 ```bash
