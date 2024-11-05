@@ -727,7 +727,9 @@ MySQL的远程连接需要两个必要条件：
 由于MySQL的 `mysql.user` 表中的 `root` 用户的 `Host`属性默认为`localhost`, 意味着该用户只能在从本地访问数据库, 所以需要修改Host属性或者重新 新建一个用户，这里以新建用户为例：
 
 ```bash
-create user 'root'@'%' identified by 'root';
+create user 'root'@'%' identified by 'root';  # 或
+create user 'root'@'%' identified with mysql_native_password by 'root';
+
 grant all on *.* to 'root'@'%' with grant option;
 
 flush privileges;
