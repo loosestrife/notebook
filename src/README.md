@@ -64,11 +64,6 @@ features:
   details: 常用数据结构及算法
   link: https://www.hello-algo.com/chapter_hello_algo/
 
-- title: 面试手册
-  icon: note
-  details: 记录Java中常用的面试题分析及解答,加深记忆,面试必备
-  link: /tool/usual/
-
 copyright: false
 footer: Java Docs | MIT Licensed, Copyright © 2019-present DrizzleTow
 ---
