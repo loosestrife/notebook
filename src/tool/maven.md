@@ -29,9 +29,16 @@ Maven仓库地址：https://mvnrepository.com/
 
 安装：解压到指定目录即可，注意maven需要配置 `JAVA_HOME` 和 `MAVEN_HOME` ：
 
-![image-20211104214055983](./vx_images/image-20211104214055983.png)
+Windows下Maven环境变量设置：
+1. 新建 `MAVEN_HOME` 
+2. 编辑 `Path`, 新建 `%MAVEN_HOME%\bin`
+
+![Maven环境变量](./vx_images/image-20211104214055983.png)
+
+`JAVA_HOME`参照：[JDK环境变量](/notebook/java/syntax/before/env.html#安装jdk)
 
 <br/>
+
 
 Linux下的环境变量配置：
 ```shell
