@@ -301,12 +301,17 @@ pnpm 是一种快速且高效的 Node.js 包管理器，它通过利用硬链接
 **安装**: pnpm 可以通过 npm 安装为全局包：
 ```bash
 npm install -g pnpm
-```
-或者使用其他平台特定的包管理器，如 Homebrew（macOS）或 Chocolatey/Scoop（Windows）。
 
-pnpm 使用 npm 配置文件（`.npmrc`）来指定下载源，格式与 npm 相同。例如，更改为淘宝镜像源：
+# 设置 .pnpm-store 目录的位置
+pnpm config set store-dir "D:\Develop\.pnpm-store"
+setx PNPM_STORE "D:\Develop\.pnpm-store" /M
 ```
-registry=https://registry.npmmirror.com/
+
+pnpm 使用 npm 配置文件（`.npmrc`）来指定下载源，格式与 npm 相同。
+
+查看`pnpm`的配置项：
+```bash
+pnpm config list
 ```
 
 pnpm 除了使用 `.npmrc` 外，还可以使用 `.pnpmfile.cjs` 进行更高级的配置，比如自定义生命周期脚本。
