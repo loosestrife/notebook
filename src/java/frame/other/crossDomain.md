@@ -1,6 +1,6 @@
 ---
 
-order: -1
+order: 30
 title:  同源策略与跨域请求
 shortTitle: 解决跨域问题
 

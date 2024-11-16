@@ -1,7 +1,7 @@
 ---
 
 order: 40
-title: Stream流
+title: Stream API
 
 ---
 
