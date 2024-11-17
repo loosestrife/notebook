@@ -122,7 +122,7 @@ cat /proc/meminfo  # 查看详细内存信息
 
 <br/>
 
-#### 3. Linux语言设置
+#### 4. Linux语言设置
 
 ```shell
 locale                  # 查看当前使用的语言
@@ -135,11 +135,11 @@ LANG="en_US.UTF-8"
 
 
 ```
+:::
 
 
 
-
-#### 3. 关机重启注销
+::: details 关机/重启/注销
 
  ==重启或关机命令：shutdown== 
 
@@ -552,140 +552,117 @@ ls non_existent_file &>> combined_log.txt     # 同时追加 stdout 和 stderr
 
 
 
-## 用户与权限管理
-
-### 用户和组管理
-
-用户管理：
-
-```shell
-
-sudo useradd -m -s /bin/bash username         # 创建 `username` 用户
-#  useradd     创建用户的命令
-#  -m          指创建用户逇同时给这个用户创建一个家目录
-#  -s          指定shell的版本为bash
-#  username：  用户名称
-
-
-sudo userdel [-r] username                    # 删除用户
-#  userdel     删除用户的命令
-#  -r          指删除用户的同事，还要删除用户的家目录
-#  username：  用户名
-
-
-sudo passwd username                          # 给用户设置密码
-
-
-su username                                   # 切换用户
-
-```
-
-<br/>
-
-
-
-组管理：
-
-```shell
-
-# 添加组
-sudo groupadd groupName
-
-# 添加用户的时候指定组
-sudo useradd -m -s /bin/bash -g groupName username
-
-# 查询用户所属的组的信息
-id username
-
-# 修改组
-sudo usermod -g groupName username
-
-```
-
-
-
-<br/>
-
-
-
 ### 文件权限管理
 
-Linux里面，任何一个文件都具有『User, Group及Others』三种身份的权限
+Linux里面，任何一个文件都具有『`User`, `Group`及`Others`』三种身份的权限
 
-![image-20220401204409112](../vx_images/image-20220401204409112.png)
+![文件权限示例](../vx_images/image-20220401204409112.png)
 
-<br/>
+`rwx`这三个参数对文件和目录的意义是不同的，如下：
 
-rwx这三个参数对文件和目录的意义是不同的，如下：
-
-| 参数 |      文件       |               目录               | 权限分数 |
+| 文件/目录权限参数 |      文件       |               目录               | 对应权限分数 |
 | :--: | :-------------: | :------------------------------: | :------: |
 |  r   |   可读(read)    |  r (read contents in directory)  |    4     |
 |  w   |   可写(write)   | w (modify contents of directory) |    2     |
 |  x   | 可执行(execute) |       x (access directory)       |    1     |
 
-<br/>
+::: info 权限参数 rwx 在文件目录中的区别
+#### 在文件中的含义
+- r (read)：     可读取此文件的实际内容，如读取文本文件的文字内容等；
+- w (write)：    可以编辑、新增或者是修改该文件的内容(但不含删除该文件)；
+- x (execute)：  该文件具有可以被系统执行的权限。
 
-```shell
+#### 在目录中的含义
+- **r (read contents in directory)**：表示具有读取目录结构列表的权限，所以当你具有读取(r)一个目录的权限时，表示你==可以查询该目录下的文件名数据==。 所以可以利用 ls 这个指令将该目录的内容列表显示出来！
 
-r (read)：     可读取此一文件的实际内容，如读取文本文件的文字内容等；
-w (write)：    可以编辑、新增或者是修改该文件的内容(但不含删除该文件)；
-x (execute)：  该文件具有可以被系统执行的权限。
-
-
-r (read contents in directory)：
-表示具有读取目录结构列表的权限，所以当你具有读取(r)一个目录的权限时，表示你可以查询该目录下的文件名数据。 
-所以你就可以利用 ls 这个指令将该目录的内容列表显示出来！
-
-w (modify contents of directory)：
-可写入权限对目录来说表示你具有操作该目录结构列表的权限，也就是底下这些权限：
+- **w (modify contents of directory)**：可写入权限对目录来说表示你具有操作该目录结构列表的权限，也就是底下这些权限：
     - 建立新的文件与目录；
-    - 删除已经存在的文件与目录(不论该文件的权限为何！)
+    - 删除已经存在的文件与目录(不论该文件的权限是什么！)
     - 将已存在的文件或目录进行更名；
     - 移动该目录内的文件、目录位置。
 
-x (access directory)：
-目录不可以被执行，目录的x代表的是用户能否进入该目录成为工作目录的用途！ 
-所谓的工作目录(work directory)就是你目前所在的目录！
-举例来说，当你登入Linux时， 你所在的家目录就是你当下的工作目录。而变换目录的指令是『cd』(change directory)
-
-```
-
-<br/>
+- **x (access directory)**：目录不可以被执行，目录的x代表的是==用户能否进入该目录使其成为工作目录==！ 所谓的工作目录(work directory)就是你目前所在的目录！举例来说，当你登入Linux时， 你所在的家目录就是你当下的工作目录。而变换目录的指令是『cd』(change directory)
+:::
 
 
 
-  ==chmod：修改文件的权限==: 
-
+**修改文件的权限**:  `chmod`
+::: warning chmod 修改文件/目录权限
+方式一：明确列出三种身份对应的权限
 ```shell
-
-# 方式一：
 sudo chmod u=rwx,g=rw,o=r fileName
-# u：表示文件拥有者
-# g：表示同组的成员
-# o：表示其他组的成员
+# u：表示文件拥有者， g：表示同组的成员， o：表示其他组的成员
+```
 
 
-# 方式二：通过数字来指代权限
+方式二：通过数字来指代权限
+```bash
 sudo chmod 764 fileName
+```
+:::
 
+例1：如果要将该文件变成可执行文件，并且不让其他人修改的话， 那么就需要 `-rwxr-xr-x` 这样的权限，即 `chmod 755 test.sh`
+
+例2：如果有些文件你不希望被其他人看到，那么应该将文件的权限设定为： `-rwxr-----` ， 即 `chmod 740 filename` 
+
+
+### 用户和用户组
+
+用户管理：用户管理涉及创建、修改、删除用户账户，以及管理用户的密码和权限
+
+::: info 用户管理
+1. 创建用户命令：`useradd`
+
+```bash
+sudo useradd -m -s /bin/bash username         
+
+# 添加用户的时候指定组
+sudo useradd -m -s /bin/bash -g groupName username
+```
+   `-m`：         指创建用户逇同时给这个用户创建一个家目录
+   `-s`:          指定shell的版本为bash
+ 
+2. 查看用户信息和切换用户： `id` ， `su`
+
+```bash
+id john        # 查看用户 john 的 UID、GID 和所属组等信息
+ 
+su username    # 切换到指定用户
 ```
 
-<br/>
+3. 修改用户信息和密码
 
+```bash
+usermod -aG sudo john       # 将用户 john 添加到 sudo 组
+usermod -s /bin/bash john   # 修改用户 john 的默认 shell 为 /bin/bash
+
+passwd john                 # 设置用户 john 的密码
+```
+
+4. 删除用户： `groupdel`
+
+```bash
+userdel john          # 删除用户 john
+userdel -r john       # 删除用户 john 并删除其主目录
+```
+:::
+
+
+组管理：用户组管理涉及创建、修改、删除用户组，以及管理用户组的成员
+
+::: tip 用户组管理
 ```shell
+sudo groupadd groupName     # 添加组
 
-# 一些常见情景例：
+getent group developers     # 查看用户组信息
+groups john                 # 查看用户所属组
 
-如果要将该文件变成可执行文件，并且不让其他人修改的话， 那么就需要 -rwxr-xr-x 这样的权限，即 chmod 755 test.sh 
+# 修改用户组信息
+groupmod -n newgroup oldgroup  # 将用户组 oldgroup 重命名为 newgroup
 
-如果有些文件你不希望被其他人看到，那么应该将文件的权限设定为： -rwxr----- ， 即 chmod 740 filename 
-
+groupdel developers         # 删除用户组
 ```
-
-
-
-<br/>
+:::
 
 
 
@@ -693,37 +670,74 @@ sudo chmod 764 fileName
 
 ### Linux进程管理
 
-```shell
+Linux 进程管理涉及启动、停止、监控和管理运行中的进程。
 
-# 查看进程
-ps
-# -e 显示所有的进程
-# -f 全格式
-
-# a 表示显示终端上所有的进程
-# u 以用户的格式来显示进程信息
-# x 显示后台运行的进程
-
-
-# 一般查询进程，分为两种方式 ps -ef 、 ps aux
+::: info 查看进程状态
+- `ps`：显示当前系统的进程状态。
+  - -e 显示所有的进程
+  - -f 全格式
+  - -a 表示显示终端上所有的进程
+  - -u 以用户的格式来显示进程信息
+  - -x 显示后台运行的进程
+- `top`：动态显示系统中进程的资源使用情况。
+- `htop`：类似于 `top`，但提供了更丰富的交互式界面。
+```sh
 ps -ef  可以显示父进程的信息
 ps aux  可以显示进程占用的资源信息
-
 
 # 搜索进程（常用）
 ps -ef | grep 进程名或进程id
 ps aux | grep 进程名或进程id
 
 
-# 关闭进程
-kill -9 pid      # 强制关闭进程，从操作系统内核级别杀死进程
-kill -15 pid     # 让内核通知应用主动关闭
+# 使用 top 命令实时查看进程
+top  # 实时显示系统中进程的资源使用情况
 
+# 使用 htop 命令实时查看进程（需要安装）
+htop  # 实时显示系统中进程的资源使用情况
+```
+:::
+
+
+**启动进程**: 
+```sh
+# 前台启动
+./script.sh  # 在前台启动脚本
+
+# 后台启动
+./script.sh &  # 在后台启动脚本
+
+# 使用 nohup 命令在后台启动并使其在终端关闭后继续运行
+nohup ./script.sh &  # 在后台启动脚本，并使其在终端关闭后继续运行
+```
+
+**终止进程**：
+```sh
+# 使用 kill 命令终止进程
+kill 1234     # 发送 SIGTERM 信号终止 PID 为 1234 的进程
+kill -9 1234  # 发送 SIGKILL 信号强制终止 PID 为 1234 的进程
+
+# 使用 pkill 命令终止进程
+pkill script.sh  # 终止所有名为 script.sh 的进程
+
+# 使用 killall 命令终止进程
+killall script.sh  # 终止所有名为 script.sh 的进程
+```
+
+**控制进程优先级**:
+```sh
+# 使用 nice 命令启动进程并设置优先级
+nice -n 10 ./script.sh  # 启动脚本并设置优先级为 10
+
+# 使用 renice 命令更改进程优先级
+renice -n 10 -p 1234  # 将 PID 为 1234 的进程优先级设置为 10
 ```
 
 
+  
 
-<br/>
+
+
 
 ### Linux服务管理
 
@@ -798,7 +812,7 @@ sudo service nginx restart
 sudo service nginx status
 ```
 
-@tab systemd服务管理
+@tab:active systemd服务管理
 
 `systemd` 是一种现代化的初始化系统，提供了更为丰富的功能和更精细的服务控制。在使用 `systemd` 的Linux发行版中，服务由 `.service` 文件控制，通常位于 `/lib/systemd/system/` 或 `/etc/systemd/system/` 目录下。常见命令：
 
