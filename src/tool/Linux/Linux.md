@@ -7,24 +7,17 @@ icon: linux01
 
 ---
 
+一些在线网站：[鸟哥的 Linux 私房菜 基础学习篇](http://cn.linux.vbird.org/linux_basic/linux_basic.php) , [鸟哥的 Linux 私房菜 服务器架设篇](http://cn.linux.vbird.org/linux_server/)
 
 
-## 一 Linux简介
+## Linux的常见命令
 
+### Linux命令基础
 
+介绍Linux的命令提示符，查看命令的帮助信息，查看系统及硬件信息，语言设置以及关机重启命令
 
-一些在线网站：
-
-- [鸟哥的 Linux 私房菜 服务器架设篇](http://cn.linux.vbird.org/linux_server/)
-- [鸟哥的 Linux 私房菜 基础学习篇](http://cn.linux.vbird.org/linux_basic/linux_basic.php) 
-
-
-
-<br/>
-
-
-
-### 1. 命令行提示符
+::: info Linux基础
+#### 1. 命令行提示符
 
 Linux命令行结尾的提示符有 “#” 和 “$” 两种不同的符号
 
@@ -55,7 +48,7 @@ set|grep PS1            # 注意PS要大写
 
 
 
-### 2. 查看命令帮助
+#### 2. 查看命令帮助
 
   ==使用 man 或 --help 获取命令帮助信息==：
 
@@ -99,7 +92,54 @@ Linux系统中的info命令是一个查看程序对应文档信息的命令，�
 
 
 
-### 3. 关机重启注销
+
+
+
+#### 3. 查看系统信息
+
+linux查看cpu、内存、版本信息
+
+```shell
+# 查看CPU信息
+cat /proc/cpuinfo | grep name | cut -f2 -d: | uniq -c 
+cat /proc/cpuinfo | grep physical | uniq -c 
+
+getconf LONG_BIT   
+#32 (说明当前CPU运行在32bit模式下, 但不代表CPU不支持64bit) 
+
+dmidecode | grep "Product Name"    # 查看机器型号 
+
+lsb_release -a  # 查看操作系统版本
+
+
+# 查看内存信息
+free
+cat /proc/meminfo  # 查看详细内存信息 
+
+```
+
+
+
+<br/>
+
+#### 3. Linux语言设置
+
+```shell
+locale                  # 查看当前使用的语言
+locale -a               # 查看系统中可以使用的语言
+
+vi /etc/locale.conf     # 修改以下内容（LANG="zh_CN.UTF-8" ==> LANG="en_US.UTF-8" ）
+
+#LANG="zh_CN.UTF-8"
+LANG="en_US.UTF-8"
+
+
+```
+
+
+
+
+#### 3. 关机重启注销
 
  ==重启或关机命令：shutdown== 
 
@@ -138,151 +178,63 @@ shutdown是一个用来安全关闭或重启Linux系统的命令，系统在关�
 <br/>
 
 ![image-20220314141234604](../vx_images/image-20220314141234604.png)
+:::
 
 
 
-<br/>
+### cd/pwd/ls
 
-
-
-### 4. 查看系统信息
-
-linux查看cpu、内存、版本信息
+ ==cd：切换目录==：cd命令是 “change directory” 中每个单词的首字母缩写，其功能是从当前工作目录切换到指定的工作目录。
 
 ```shell
-# 查看CPU信息
-cat /proc/cpuinfo | grep name | cut -f2 -d: | uniq -c 
-cat /proc/cpuinfo | grep physical | uniq -c 
-
-
-getconf LONG_BIT   
-#32 (说明当前CPU运行在32bit模式下, 但不代表CPU不支持64bit) 
-
-cat /proc/cpuinfo | grep flags | grep ' lm ' | wc -l  
-# 8 (结果大于0, 说明支持64bit计算. lm指long mode, 支持lm则是64bit) 
-
-
-dmidecode | grep "Product Name"    # 查看机器型号 
-
-lsb_release -a  # 查看操作系统版本
-
-
-# 查看内存信息
-free
-cat /proc/meminfo  # 查看详细内存信息 
-
+cd -                 # 返回当前用户上一次所在的目录
+cd ..                # 切换到当前目录的上一级目录
+cd ~                 # 进入当前用户的家目录
 ```
 
-
-
 <br/>
 
-### 5. Linux语言设置
 
-```shell
-
-locale                  # 查看当前使用的语言
-
-locale -a               # 查看系统中可以使用的语言
+==pwd：显示当前所在的位置== ：pwd命令是 “print working directory” 中每个单词的首字母缩写，其功能是显示当前工作目录的绝对路径。
 
 
-vi /etc/locale.conf     # 修改以下内容（LANG="zh_CN.UTF-8" ==> LANG="en_US.UTF-8" ）
-
-#LANG="zh_CN.UTF-8"
-LANG="en_US.UTF-8"
-
-
-```
+在实际工作中，我们在命令行操作命令时，经常会在各个目录路径之间进行切换，此时可使用pwd命令快速查看当前我们所在的目录路径。
 
 
 
 <br/>
 
+ls 命令是Linux下最常用的指令之一。==ls：显示目录下的内容及相关属性信息==：
 
+- ls命令可以理解为英文单词list的缩写，其功能是列出目录的内容及其内容属性信息（list directory contents）。
 
-## 二 文件与目录管理
+- 该命令有点类似于DOS系统下的dir命令，有趣的是，Linux下其实也有dir命令，但我们更习惯于使用ls。
 
-
-
-  ==ls：显示目录下的内容及相关属性信息==：
-
-ls 命令是Linux下最常用的指令之一。
-
-ls命令可以理解为英文单词list的缩写，其功能是列出目录的内容及其内容属性信息（list directory contents）。
-
-该命令有点类似于DOS系统下的dir命令，有趣的是，Linux下其实也有dir命令，但我们更习惯于使用ls。
-
-<br/>
-
-**常用参数：** 
+ls命令常用参数：
 
 | 常用参数 | 参数说明                                         |
 | :------: | ------------------------------------------------ |
 |    -a    | 显示所有文件及目录 (包括以“.”开头的隐藏文件)     |
-|    -l    | 使用长格式列出文件及目录信息                     |
+|    -l    | 使用长格式列出文件及目录信息  （有时可以使用 `ll` 命令代替 `ls -l`）                    |
 |    -r    | 将文件以相反次序显示(默认依英文字母次序)         |
 |    -t    | 根据最后的修改时间排序                           |
 |    -A    | 同 -a ，但不列出 “.” (当前目录) 及 “..” (父目录) |
 |    -S    | 根据文件大小排序                                 |
 |    -R    | 递归列出所有子目录                               |
 
-<br/>
-
-```
-
 stat命令：用于显示文件的状态信息。stat命令的输出信息比ls命令的输出信息要更详细
-
-```
-
-
-
-<br/>
-
-
-
-  ==pwd：显示当前所在的位置== ：
-
-```shell
-
-pwd命令是 “print working directory” 中每个单词的首字母缩写，其功能是显示当前工作目录的绝对路径。
-
-在实际工作中，我们在命令行操作命令时，经常会在各个目录路径之间进行切换，此时可使用pwd命令快速查看当前我们所在的目录路径。
-
-```
-
 
 
 <br>
 
 
 
- ==cd：切换目录==：
+### mkdir/touch
+
+ ==mkdir：创建目录==：mkdir命令是“make directories”中每个单词的粗体字母组合而成，其功能是创建目录，默认情况下，如果要创建的目录已存在，则会提示此文件已存在；而不会继续创建目录。
 
 ```shell
-
-# cd命令是 “change directory” 中每个单词的首字母缩写，其功能是从当前工作目录切换到指定的工作目录。
-
-cd -                 # 返回当前用户上一次所在的目录
-cd ..                # 切换到当前目录的上一级目录
-cd ~                 # 进入当前用户的家目录
-```
-
-
-
-<br/>
-
-
-
-### 1. mkdir和touch
-
- ==mkdir：创建目录==：
-
-```shell
-# mkdir命令是“make directories”中每个单词的粗体字母组合而成，其功能是创建目录，
-# 默认情况下，如果要创建的目录已存在，则会提示此文件已存在；而不会继续创建目录。
-
 mkdir dir1 dir2                # mkdir命令可以同时创建多个目录
-
 
 # 使用-p参数递归创建目录, 加-v参数显示创建目录的过程(其实这个-v没有什么实际用途)
 mkdir -p dir/test
@@ -293,9 +245,8 @@ mkdir -pv dir/test
 
 <br/>
 
+同时创建多个目录及多级子目录 (注意大括号内不能有空格)
 ```shell
-# 同时创建多个目录及多级子目录 (注意大括号内不能有空格)
-
 mkdir -pv dir/{dir_1,dir_2}/{dir_a,dir_b}
 
 ```
@@ -310,86 +261,44 @@ mkdir -pv dir/{dir_1,dir_2}/{dir_a,dir_b}
 
 touch命令有两个功能：一是创建新的空文件；二是改变已有文件的时间戳属性。
 
-特别说明：
-
-1）注意区分touch和mkdir命令的功能，mkdir命令是创建空目录，而touch是创建空文件。
-
-2）在Linux中，一切皆文件。虽然touch命令不能创建目录，但是可以修改目录的时间戳。
-
 ![image-20220314220906574](../vx_images/image-20220314220906574.png)
 
-<br/>
-
 ```shell
-
 touch a.txt b.txt          # 创建多个文件
 
 touch log{01..05}          # log01  log02  log03  log04  log05  (注意是两个点)
-
 ```
 
 <br/>
 
 
+::: tip 修改文件时间
 
-### 2. 修改文件时间
+- **modifiy time (mtime)**：当该文件的『内容』变更时，就会升级这个时间！内容数据指的是文件的内容，而不是文件的属性或权限喔！
 
- ==文件时间==：
+- **changetime (ctime)**： 当该文件的『状态 (status)』改变时，就会升级这个时间，举例来说，像是权限与属性被更改了，都会升级这个时间啊。
 
-- **modifiy time (mtime)**：
-
-  当该文件的『内容』变更时，就会升级这个时间！内容数据指的是文件的内容，而不是文件的属性或权限喔！
-
-- **changetime (ctime)**：
-
-  当该文件的『状态 (status)』改变时，就会升级这个时间，举例来说，像是权限与属性被更改了，都会升级这个时间啊。
-
-- **access time (atime)**：
-
-  当『该文件的内容被读取』时，就会升级这个读取时间 (access)。
-
-  举例来说，我们使用 cat 去读取 /etc/man_db.conf， 就会升级该文件的 atime 了。
+- **access time (atime)**：当『该文件的内容被读取』时，就会升级这个读取时间 (access)。举例来说，我们使用 `cat` 去读取 `/etc/man_db.conf`， 就会升级该文件的 atime 了。
 
 ```shell
-
-# 查看 文件时间
-
 ls -l 文件名                      # 查看 mtime
-
 ls -l --time=ctime 文件名         # 查看 ctime
-
 ls -l --time=atime 文件名         # 查看 atime
-
 ```
 
-示例：
+![文件时间](../vx_images/image-20220401102014938.png)
 
-![image-20220401102014938](../vx_images/image-20220401102014938.png)
 
-<br/>
+touch：将某个文件的所有日期更新为系统当前时间， 或将(mtime 与 atime)修改为指定时间 
 
-```shell
+![修改所有时间](../vx_images/image-20220401105626927.png)
 
-touch 这个命令的两个常见功能：
+![atime和mtime](../vx_images/image-20220401110013639.png)
+:::
 
-1. 创建一个空的文件；
-
-2. 将某个文件的所有日期更新为系统当前时间， 或将(mtime 与 atime)修改为指定时间 
-
-```
-
-<br/>
-
-![image-20220401105626927](../vx_images/image-20220401105626927.png)
-
-<br/>
-
-![image-20220401110013639](../vx_images/image-20220401110013639.png)
-
-<br/>
 
 change time 只能通过修改系统时间来自定义（但是一般情况下修改系统时间需要root权限）
-
+::: details 通过改变系统时间来修改change time 
 ```shell
 
 [root@DevMachine temp]# date -s 06/06/2022 >> a.bash
@@ -431,82 +340,52 @@ Change: 2022-06-06 00:00:00.000000000 +0800
  Birth: -
  
 ```
+:::
 
 
 
-<br/>
 
+### cp/mv/rm
 
+==cp：复制文件或目录==: cp命令可以理解为英文单词copy的缩写，其功能为复制文件或目录。
 
-### 3. 复制移动删除
-
- ==cp：复制文件或目录==:
-
-cp命令可以理解为英文单词copy的缩写，其功能为复制文件或目录。
-
-![image-20220314221359831](../vx_images/image-20220314221359831.png)
-
-
+![copy](../vx_images/image-20220314221359831.png)
 
 ```shell
-
 cp /etc/ssh/sshd_config /etc/ssh/sshd_config.ori
-
 ```
 
 
 
 <br/>
 
- ==mv：移动或重命名文件==:
-
-mv命令可以理解为英文单词move的缩写，其功能是移动或重命名文件（move/rename files）
+==mv：移动或重命名文件==: mv命令可以理解为英文单词move的缩写，其功能是移动或重命名文件（move/rename files）
 
 ```shell
-
 mv a.txt b.txt             # 若b.txt 不存在，则将 a.txt 重命名为 b.txt
-
 ```
 
 
 
 <br/>
 
-  ==rm：删除文件或目录==:
+==rm：删除文件或目录==: rm命令可以理解为英文单词remove的缩写，其功能是删除一个或多个文件或目录（remove files or directories）。这是Linux系统里最危险的命令之一，请慎重使用。
 
-rm命令可以理解为英文单词remove的缩写，其功能是删除一个或多个文件或目录（remove files or directories）。
-
-这是Linux系统里最危险的命令之一，请慎重使用。
-
-![image-20220314222403039](../vx_images/image-20220314222403039.png)
-
-
+![remove](../vx_images/image-20220314222403039.png)
 
 ```shell
-
 rm -rf dir                   # 递归强制删除dir目录及其内部文件和目录
-
 ```
 
 
-
 <br/>
 
- ==rmdir：删除空目录==:
-
-rmdir命令用于删除空目录（remove empty directories），当目录不为空时，命令不起作用
-
-rmdir命令在实际工作中使用的极少
+==rmdir：删除空目录==: rmdir命令用于删除空目录（remove empty directories），当目录不为空时，命令不起作用。rmdir命令在实际工作中使用的极少
 
 
 
 
-
-<br/>
-
-
-
-### 4. 查看文件内容
+### 查看文件内容
 
   ==cat、tac、nl 直接查看文件内容== : 
 
@@ -516,13 +395,11 @@ rmdir命令在实际工作中使用的极少
 
 这些命令在文件行数较多时使用并不方便、推荐使用下面介绍的 more 和 less
 
+::: info more 和 less 
 
+ more、less 不仅可以分页查看文件，less还支持文件内容搜索
 
-<br/>
-
-  ==more、less 分页查看文件== : 
-
-- more 一页一页的显示文件内容
+- **more**: 一页一页的显示文件内容
 
   ```shell
   空白键 (space)  ：代表向下翻一页；
@@ -533,11 +410,9 @@ rmdir命令在实际工作中使用的极少
   b 或 [ctrl]-b  ：代表往回翻页，不过这动作只对文件有用，对管线无用。
   ```
 
-  <br>
+- **less**: 命令是一个更强大的分页查看工具，提供了更多的功能和灵活性。还可以往前翻页！
 
-- less 与 more 类似，但是比 more 更好的是，他可以往前翻页！
-
-  ```
+  ```shell
   空白键       ：向下翻动一页；
   [pagedown]  ：向下翻动一页；
   [pageup]    ：向上翻动一页；
@@ -547,7 +422,25 @@ rmdir命令在实际工作中使用的极少
   N           ：反向的重复前一个搜寻 (与 / 或 ? 有关！)
   q           ：退出 less 这个程序；
   ```
-
+  - 前进/后退，翻页
+    - `空格键`/ `pagedown`：显示下一屏内容。
+    - `b`/ `pageup`：回退一屏内容。
+    - `d`：向前翻半屏。
+    - `y`：向上翻半屏。
+    - `Enter`：显示下一行内容。
+  - 搜索字符串
+    - `/`：搜索字符串。
+    - `?`：反向搜索字符串。
+    - `n`：重复上一次搜索。
+    - `N`：反向重复上一次搜索。
+  - `g`：跳到文件开头。
+  - `G`：跳到文件结尾。
+  - `h`：显示帮助信息。
+  - `q`：退出 `less` 命令。
+```bash
+less -N content.txt     # 显示文件内容并显示行号
+```
+:::
 
 
 <br/>
@@ -565,16 +458,11 @@ tail -n +100 /etc/man_db.conf    # 代表该文件从100行以后都会被列出
 
 ```
 
-<br/>
+例：假如想要显示 /etc/man.config 的第 11 到第 20 行呢？
 
 ```shell 
-
-# 例题：假如我想要显示 /etc/man.config 的第 11 到第 20 行呢？
-
-# 答：先取前 20 行，再取后十行，所以结果就是：
-
+# 取前 20 行，再取后十行，所以结果就是：
 head -n 20 /etc/man_db.conf | tail -n 10 
-
 ```
 
 
@@ -583,64 +471,90 @@ head -n 20 /etc/man_db.conf | tail -n 10
 
 
 
-### 5. 压缩和解压缩
+### 压缩和打包
 
-```shell 
-在Linux操作系统中，默认支持两种压缩格式
-	1   .tar.gz
-	2   .zip
-	
-	
-不同的压缩格式可以使用不同的软件来解压与压缩
+`tar` 命令用于打包和解包文件，但它本身并不进行压缩。通常与 `gzip`、`bzip2` 或 `xz` 结合使用来实现压缩。
 
- 1  .tar.gz  这种压缩格式其实是Linux比较传统的压缩格式，需要借助于tar命令
-   
-     tar -zcvf name.tar.gz test            # 压缩
-  
-     tar -zxvf name.tar.gz -C targetDir    # 解压   -C 表示解压到指定的路径下
- 
-   
- 2   .zip
- 
-    zip name.zip fileName                   # 压缩
-  
-    unzip name.zip                          # 解压
-  
+```sh
+# 打包并使用 gzip 压缩
+tar -czvf archive.tar.gz file1.txt file2.txt mydirectory
+
+# 打包并使用 bzip2 压缩
+tar -cjvf archive.tar.bz2 file1 file2 directory  
+
+# 打包并使用 xz 压缩
+tar -cJvf archive.tar.xz file1 file2 directory  
+
+
+# 解压 gzip 压缩的 tar 归档文件
+tar -xzvf archive.tar.gz  
+
+# 解压 bzip2 压缩的 tar 归档文件
+tar -xjvf archive.tar.bz2  
+
+# 解压 xz 压缩的 tar 归档文件
+tar -xJvf archive.tar.xz  
+```
+::: tip 常见参数解释
+  - `-c`: 创建一个新的归档文件, `tar -c` 用于指定创建归档文件
+  - `-v`:  显示详细信息，即在执行过程中显示处理的文件名。
+  - `-f`: 指定归档文件的名称, `tar -f archive.tar` 用于指定归档文件的名称为 `archive.tar`
+  - `-x`:  从归档文件中提取文件。`tar -x` 用于从归档文件中提取文件
+:::
+
+`gzip`、`bzip2` 和 `xz` 可用于单独压缩文件（单个文件）:
+```bash
+# 使用 gzip 单独压缩文件
+gzip file.txt  # 压缩 file.txt，生成 file.txt.gz
+
+# 使用 gzip 解压文件
+gunzip file.txt.gz  # 解压 file.txt.gz，恢复为 file.txt
 ```
 
+| 特性           | gzip                    | bzip2                     | xz                              |
+|----------------|----------------------|----------------------------|-------------------------------|
+| 压缩/解压速度       | 最快                            | 适中                       | 慢                      |
+| 压缩比(以文本为例)   | 适中 (50% 到 70%)       | 高 (30% 到 50%)      | 最高 (20% 到 40%)     |
+| 内存占用情况  | 低                         | 中等                  | 高，尤其是在高压缩级别下                   |
 
 
-<br/>
 
 
 
-### 6. 追加与重定向
+### 追加与重定向
 
-```shell
+在 Linux 中，重定向和追加是用于控制命令输出的重要机制。通过重定向，可以将命令的标准输出（stdout）或标准错误（stderr）重定向到文件或其他流中。通过追加，可以将输出添加到文件的末尾，而不是覆盖现有内容。
 
-重定向：可以把控制台输出的内容重定向到文件中。
-	   如果文件不存在，那么会创建文件
-	   如果文件已经存在，那么会覆盖文件中的内容
-	   echo 'bob' > 1.txt
-	   ll > 2.txt
-	   
-	   
-追加： 其实就是在指定文件的末尾追加控制台输出的内容
-	  不会覆盖原来文件中的内容
-	  如果文件不存在，依然会创建文件
-	  ll >> 2.txt
+```bash
+echo "Hello, World!" > greeting.txt           # 输出重定向 (Output Redirection)
+ls non_existent_file 2> error_log.txt         # 错误重定向 (Error Redirection)
+ls non_existent_file &> combined_log.txt      # 同时重定向 stdout 和 stderr
 
+echo "Another line" >> greeting.txt           # 输出追加 (Append Output)
+ls non_existent_file 2>> error_log.txt        # 错误追加 (Append Error)
+ls non_existent_file &>> combined_log.txt     # 同时追加 stdout 和 stderr
 ```
 
+::: info 重定向 (Redirection) 与 追加 (Appending)
+#### 重定向 (Redirection)
+重定向：如果文件不存在，那么会创建文件。如果文件已经存在，那么会覆盖文件中的内容
+- 输出重定向 (`>`)：将标准输出重定向到文件，覆盖现有内容。
+- 错误重定向 (`2>`)：将标准错误重定向到文件，覆盖现有内容。
+- 同时重定向 stdout 和 stderr (`&>`)：将标准输出和标准错误重定向到同一个文件，覆盖现有内容。
+
+#### 追加 (Appending)
+追加：如果文件不存在，依然会创建文件。文件已存在时不会覆盖原来文件中的内容
+
+- 输出追加 (`>>`)：将标准输出追加到文件的末尾，不覆盖现有内容。
+- 错误追加 (`2>>`)：将标准错误追加到文件的末尾，不覆盖现有内容。
+- 同时追加 stdout 和 stderr (`&>>`)：将标准输出和标准错误追加到同一个文件的末尾，不覆盖现有内容。
+:::
 
 
-<br/>
 
+## 用户与权限管理
 
-
-## 三 用户与权限管理
-
-### 1. 用户和组管理
+### 用户和组管理
 
 用户管理：
 
@@ -694,7 +608,7 @@ sudo usermod -g groupName username
 
 
 
-### 2. 文件权限管理
+### 文件权限管理
 
 Linux里面，任何一个文件都具有『User, Group及Others』三种身份的权限
 
@@ -775,9 +689,9 @@ sudo chmod 764 fileName
 
 
 
-## 四 进程与服务管理
+## 进程与服务管理
 
-### 1. Linux进程管理
+### Linux进程管理
 
 ```shell
 
@@ -811,7 +725,7 @@ kill -15 pid     # 让内核通知应用主动关闭
 
 <br/>
 
-### 2. Linux服务管理
+### Linux服务管理
 
 在Linux系统中，服务管理是一个非常重要的任务，涉及到启动、停止、重启、查看状态等操作。传统的Linux系统使用 `init` 作为初始化进程，而近年来，越来越多的Linux发行版转而使用 `systemd` 作为初始化系统。
 
@@ -951,9 +865,9 @@ sudo systemctl disable nginx.service
 
 
 
-## 五 SSH和网络管理
+## SSH和网络管理
 
-### 1. 常用网络工具
+### 常用网络工具
 
 ```shell
 
@@ -983,7 +897,7 @@ netstat -ano | findstr port
 
 
 
-### 2. SSH远程连接
+### SSH远程连接
 
 ```shell
 
@@ -1015,7 +929,7 @@ ps -ef | grep ssh
 
 
 
-### 3. Linux防火墙
+### Linux防火墙
 
 
 
