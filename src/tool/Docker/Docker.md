@@ -8,15 +8,16 @@ icon: docker
 ---
 
 
-# Docker容器技术
+## Docker的基础使用
 
-## Docker的安装和使用
+### Docker的安装
 
-### 1. Docker Install
+docker 官网安装教程：https://docs.docker.com/engine/install/ubuntu/ 
 
-docker 官网安装教程：https://docs.docker.com/engine/install/centos/ 
 
-#### Docker的快速安装
+::: tabs 
+
+@tab CentOS
 
 **Uninstall old versions**：
 
@@ -30,8 +31,6 @@ sudo yum remove docker \
                   docker-logrotate \
                   docker-engine
 ```
-
-<br>
 
 **install using the repository** :
 
@@ -58,26 +57,6 @@ sudo docker run hello-world
 
 ```
 
-<br>
-
-**配置阿里云镜像加速器**: 
-
-```shell
-
-mkdir -p /etc/docker && tee /etc/docker/daemon.json <<-'EOF'
-{
-  "registry-mirrors": ["https://puqyip19.mirror.aliyuncs.com"]
-}
-EOF
-
-systemctl daemon-reload && systemctl restart docker
-
-```
-
-<br>
-
-
-
 #### 安装指定版本docker
 
 ```bash
@@ -95,143 +74,161 @@ sudo yum install docker-ce-<VERSION_STRING>.x86_64 docker-ce-cli-<VERSION_STRING
 
 ```
 
-<br>
+@tab:active Ubuntu
+参照官网教程
+:::
 
 
 
-### 2. Docker常用命令
+
+
+### 配置镜像加速
+
+1. 配置阿里云镜像加速器: 
+
+```shell
+mkdir -p /etc/docker && tee /etc/docker/daemon.json <<-'EOF'
+{
+  "registry-mirrors": ["https://puqyip19.mirror.aliyuncs.com"]
+}
+EOF
+
+systemctl daemon-reload && systemctl restart docker
+
+```
+
+2. 自建镜像站
+
+视频教程参照：https://www.bilibili.com/video/BV13wDMYGECr
+
+Github仓库地址：https://github.com/jonssonyan/cf-workers-proxy
+
+
+
+
+### Docker基础命令
 
 [Docker官网—常用命令](https://docs.docker.com/engine/reference/commandline/docker/) —— [Docker Hub](https://hub.docker.com/)
+
 ```shell
-
 docker version
-
 docker info
 
 docker xxx  --help     # 命令
-
 ```
 
-<br>
 
 
 
-#### Images commands
+### Docker镜像
 
-镜像是怎么做成的? 基础环境+软件 （例如 ：redis的完整镜像应该是： linux系统 + redis软件）
-
-- alpine：超级经典版的linux 5mb；+ redis = 29.0mb
-- 没有alpine3的：就是centos基本版
-
-以后自己选择下载镜像的时候尽量使用 alpine 和 slim 
+Docker镜像是由基础环境+软件构成的 （例如 ：redis的完整镜像应该是： linux系统 + redis软件）
 
 ```shell
+# 查看本地主机上的所有镜像
+docker images      
 
-docker images                            #查看本地主机上的所有镜像
+# 产看指定镜像的具体信息
+docker container inspect 容器名     # 等同于 docker inspect 容器
+# 获取容器/镜像的元数据
+docker inspect NAME|ID
 
-#搜索镜像
-    docker search xxx                        #搜索镜像：如 mysql,redis......
-docker search redis --filter=STARS=100   #过滤掉STARS小于100以下的
+# 重命名
+docker tag 原镜像:标签 新镜像名:标签 
+```
 
+搜索和下载镜像：
+```bash
+docker search xxx                   # 搜索镜像：如 mysql,redis......
+docker search ventixy.us.kg/redis   # 加速搜索,不加上镜像站地址搜索时可能不使用前面配置的加速地址
 
-#下载镜像
-docker pull xxx                          #下载镜像，默认为最新版本
-docker pull redis == docker pull redis:latest（最新版）
+# 下载镜像 默认为最新版本
+docker pull xxx                    
+docker pull redis                   # 等同于docker pull redis:latest
+docker pull mysql:5.7               # 可指定docker官网可查询到的版本
+```
 
-docker pull mysql:5.7                    #也可指定docker官网可查询到的版本
-
-
-#删除镜像
+删除镜像：
+```bash
 docker rmi -f imageID                    #根据镜像ID删除镜像
 docker rmi -f $(docker images -aq)       #删除所有镜像
 
-docker image prune   #移除游离镜像 dangling：游离镜像（没有镜像名字的）
-
-
-#重命名
-docker tag 原镜像:标签 新镜像名:标签 
-
-
-docker container inspect 容器名 = docker inspect 容器
+docker image prune   # 移除游离镜像 dangling：游离镜像（没有镜像名字的）
 
 ```
 
-<br>
 
+### Docker容器管理
 
-
-#### Containers commands
-
-从镜像创建容器，有两个命令：docker run的立即启动，docker create得稍后自己手动启动
+要创建容器，必须先下载镜像。从镜像创建容器，有两个命令：`docker run`的立即启动，`docker create`得稍后自己手动启动
 
 ```shell
+docker ps -a                    # 查看运行中的容器（-a查看全部，-q只显示id）
+docker top container_id         # 查看指定容器中的进程信息
 
-docker pull centos              #要创建容器，必须先下载镜像
-docker ps                       #查看运行中的容器（-a查看全部，-q只显示id）
-
-#创建一个新的容器并运行一个命令
+# 创建一个新的容器并运行一个命令
 docker run xxx
-docker run -it centos /bin/bash #启动并进入容器（使用exit停止并退出，也可以使用Ctrl+P+Q不停止退出）
-docker run -d centos            #【问题】发现centos停止了！？原因：docker容器使用后天运行必须要有一个前台进程
+# 启动并进入容器（使用exit停止并退出，也可以使用Ctrl+P+Q不停止退出）
+docker run -it centos /bin/bash 
+#【问题】发现centos停止了！？原因：docker容器使用后天运行必须要有一个前台进程
+docker run -d centos            
+```
 
+从镜像创建容器和，后续再次启动需要执行`docker start`, 停止和重启等参照：
 
-#启动和停止
+```bash
 docker start   container_id     #启动容器
 docker stop    container_id     #停止正在运行的容器（优雅停机）
 docker kill    container_id     #强制停止正在运行的容器（kill是强制kill -9，约等于直接拔电源）
 docker restart container_id     #重启容器
-
-
-#删除容器
-docker rm 86fe3bcb173e          #删除指定id的容器（不能删除正在运行的容器，如需强制删除需添加-f）
-docker rm -f $(docker ps -aq)   #删除全部容器
-
 ```
 
-<br>
-
-
-
-#### Others commands
-
-```shell
-
-docker logs                              #日志
-docker top container_id                  #查看指定容器中的进程信息
-docker inspect NAME|ID                   #获取容器/镜像的元数据
-
-
-docker exec -it container_id /bin/bash   #进入运行的容器中执行命令
-docker exec -it -u 0:0 --privileged container_id /bin/bash  # 以特权方式进入容器 （0表示用户）
-
-docker attach -it container_id #连接到正在运行中的容器（绑定的是控制台. 可能导致容器停止。不要用这个）
-
+删除容器（不能删除正在运行的容器，如需强制删除需添加-f）：
+```bash
+docker rm 86fe3bcb173e          # 删除指定id的容器
+docker rm -f $(docker ps -aq)   # 删除全部容器
 ```
 
-<br>
 
-**docker volume 数据卷**：
+
+### 容器内部操作
+docker exec ：在运行的容器中执行命令
 
 ```bash
+docker exec -it <container ID> /bin/bash      # 进入容器内部
+
+# 以特权方式进入容器 （0表示用户）
+docker exec -it -u 0:0 --privileged container_id /bin/bash  
+
+exit                                          # 退出container (或者使用Ctrl + D)
+```
+
+容器内部操作示例：更改容器内系统的root密码
+```bash
+docker exec -it <MyContainer> bash            # 进入后修改
+root@MyContainer:/# passwd
+Enter new UNIX password:
+Retype new UNIX password:
+```
+
+
+### Docker数据卷
+
+```bash
+docker volume ls           # 列出所有的数据卷
+docker volume inspect xxx  # 查看数据卷的详细信息
 
 docker volume create xxx   # 创建数据卷
 
-docker volume ls           # 列出所有的数据卷
-
-docker volume inspect xxx  # 查看数据卷的详细信息
-
-
 docker volume pause        # 删除所有的未使用的数据卷
-
 docker volume rm xxx       # 删除指定的数据卷
 
 ```
 
-<br>
 
 
 
-### 3. Docker常用镜像安装
+## 常用镜像安装和配置
 
 如何使用Docker部署组件：
 1、先去找组件的镜像
@@ -239,23 +236,89 @@ docker volume rm xxx       # 删除指定的数据卷
 3、docker run进行部署
 
 
+::: info docker run
 
-#### MySql安装与配置
+常用关键参数OPTIONS 说明：
+
+```bash
+
+-d:   # 后台运行容器，并返回容器ID；
+-P:   # 随机端口映射，容器内部端口随机映射到主机的端口
+-p:   # 指定端口映射，格式为：主机(宿主)端口:容器端口
+
+-i:   # 以交互模式运行容器，通常与 -t 同时使用；
+-t:   # 为容器重新分配一个伪输入终端，通常与 -i 同时使用
+
+--restart ,      # 指定重启策略，可以写--restart=awlays 总是故障重启
+--volume , -v:   # 绑定一个卷。一般格式 主机文件或文件夹:虚拟机文件或文件夹
+
+
+--name="nginx-lb":         # 为容器指定一个名称；
+--dns 8.8.8.8:             # 指定容器使用的DNS服务器，默认和宿主一致；
+--dns-search example.com:  # 指定容器DNS搜索域名，默认和宿主一致；
+-h "mars":                 # 指定容器的hostname；
+
+-e username="ritchie":     # 设置环境变量；
+--env-file=[]:             # 从指定文件读入环境变量；
+
+--cpuset="0-2" or --cpuset="0,1,2":   # 绑定容器到指定CPU运行；
+
+-m :             # 设置容器使用内存最大值；
+--net="bridge":  # 指定容器的网络连接类型，支持 bridge/host/none/container: 四种类型；
+
+--link=[]:       # 添加链接到另一个容器；
+--expose=[]:     # 开放一个端口或一组端口；
+
+```
+:::
+
+
+
+
+### Portainer工具
+
+Portainer是功能强大的开源工具集，可让您轻松地在Docker，Swarm，Kubernetes和Azure ACI中构建和管理容器。 Portainer的工作原理是在易于使用的GUI后面隐藏使管理容器变得困难的复杂性。
+
+```bash
+sudo docker pull portainer/portainer-ce
+
+# 服务端部署
+sudo docker volume create portainer_data
+
+sudo docker run -d -p 8000:8000 -p 9000:9000 --name=portainer --restart=always \
+-v /var/run/docker.sock:/var/run/docker.sock \
+-v portainer_data:/data portainer/portainer-ce
+# 访问 9000 端口即可
+
+# agent端部署
+sudo docker run -d -p 9001:9001 --name portainer_agent --restart=always \
+-v /var/run/docker.sock:/var/run/docker.sock \
+-v /var/lib/docker/volumes:/var/lib/docker/volumes portainer/agent
+
+```
+
+
+
+
+
+### MySQL和Redis
+
+创建实例并启动（将重要配置和数据映射到外部主机）：
 
 ```shell
-
-#下载镜像(指定版本)
 docker pull mysql:5.7
 
-#创建实例并启动mysql （5.7）
+# 创建实例并启动mysql （5.7）
 docker run -p 3306:3306 --name mysql --restart=always --privileged=true \
 -v /docker/data/mysql/log:/var/log/mysql \
 -v /docker/data/mysql/data:/var/lib/mysql \
 -v /docker/data/mysql/conf:/etc/mysql \
 -e MYSQL_ROOT_PASSWORD=123456 \
 -d mysql:5.7
+```
 
-# 创建mysql的配置文件
+设置mysql的配置文件
+```bash
 cat > /docker/data/mysql/conf/mysql.conf << EOF
 [client]
 default-character-set=utf8
@@ -271,15 +334,13 @@ skip-name-resolve
 secure_file_priv=/var/lib/mysql
 EOF
 
-docker restart mysql                    #修改完要重启mysql
-docker exec -it mysql /bin/bash         #进入mysql
-
+docker restart mysql                    # 修改完要重启mysql
+docker exec -it mysql /bin/bash         # 进入mysql
 ```
 
-<br>
 
+创建多个MySQL实例：
 ```shell
-
 # 创建实例并启动mysql（ 8.0 ）
 docker run -p 3306:3306 --name mysql8 --restart=always --privileged=true \
 -v /docker/data/mysql/log:/var/log/mysql \
@@ -295,20 +356,17 @@ docker run -p 3307:3306 --name mysql_gmall \
 -v /docker/data/mysql_gmall/conf:/etc/mysql \
 -e MYSQL_ROOT_PASSWORD=root \
 -d mysql:5.7
-
 ```
 
-<br>
 
 
 
 #### Redis安装与配置
 
 ```shell
-#下载镜像
-docker pull redis
+docker pull redis  # 下载镜像
 
-##创建实例并启动redis
+# 创建实例并启动redis
 mkdir -p /docker/data/redis/conf && touch /docker/data/redis/conf/redis.conf
 
 docker run -p 6379:6379 --name redis --restart=always \
@@ -326,11 +384,9 @@ docker restart redis                    #修改完要重启redis
 
 ```
 
-<br>
+测试持久化配置是否生效
 
 ```shell
-
-#测试持久化配置是否生效
 docker exec -it redis redis-cli
 >set name alice                     # ok
 >get name                           # "alice"
@@ -343,13 +399,11 @@ docker exec -it redis redis-cli
 
 ```
 
-<br>
 
 
 
 
-
-#### Elasticsearch部署
+### ELK环境的部署
 
 ```bash
 # 下载镜像
@@ -371,18 +425,20 @@ sudo vim elasticsearch.yml
 cluster.name: "my-es"
 network.host: 0.0.0.0
 http.port: 9200
-
-
-# 运行elasticsearch
-通过镜像，启动一个容器，并将9200和9300端口映射到本机（elasticsearch的默认端口是9200，我们把宿主环境9200端口映射到Docker容器中的9200端口）。此处建议给容器设置固定ip，我这里没设置。
-
-sudo docker run -it -d -p 9200:9200 -p 9300:9300 --name es --restart=always -e ES_JAVA_OPTS="-Xms1g -Xmx1g" -e "discovery.type=single-node"  -v /docker/data/elk/es/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml -v /docker/data/elk/es/data:/usr/share/elasticsearch/data -v /docker/data/elk/es/logs:/usr/share/elasticsearch/logs elasticsearch:7.16.3
-
 ```
 
-验证安装是否成功：浏览器访问 http://localhost:9200 ，或者命令行：`curl http://localhost:9200` . 
+通过镜像，启动一个容器，并将9200和9300端口映射到本机（elasticsearch的默认端口是9200，我们把宿主环境9200端口映射到Docker容器中的9200端口）。此处建议给容器设置固定ip，我这里没设置。
 
-<br>
+```bash
+sudo docker run -it -d -p 9200:9200 -p 9300:9300 --name es --restart=always \
+-e ES_JAVA_OPTS="-Xms1g -Xmx1g" -e "discovery.type=single-node"  \
+-v /docker/data/elk/es/config/es.yml:/usr/share/elasticsearch/config/elasticsearch.yml \
+-v /docker/data/elk/es/data:/usr/share/elasticsearch/data \
+-v /docker/data/elk/es/logs:/usr/share/elasticsearch/logs elasticsearch:7.16.3
+```
+
+验证安装是否成功：浏览器访问 `http://localhost:9200` 
+
 
 IK中文分词器：
 
@@ -427,11 +483,53 @@ sudo docker run -d --restart=always --log-driver json-file --log-opt max-size=10
 
 浏览器上输入：http://localhost:5601，如无法访问进容器检查配置是否生效
 
+
+
+### nacos安装与配置
+
+注意服务器内存不足，启动后内存溢出问题（单机standalone模式默认服务器堆大小512M）[nacos官方文档](https://nacos.io/zh-cn/docs/what-is-nacos.html)
+
+```shell
+
+docker pull nacos/nacos-server
+
+# 创建本地的映射文件：custom.properties
+mkdir -p /docker/data/nacos/{init.d,logs}
+touch /docker/data/nacos/init.d/custom.properties
+
+cat > /docker/data/nacos/init.d/custom.properties << EOF
+management.endpoints.web.exposure.include=*
+EOF
+
+```
+
 <br>
 
+创建数据库 `nacos_config` :  创建nacos数据库后，然后执行下面的Sql 。 [nacos官网的Sql](https://github.com/alibaba/nacos/blob/master/config/src/main/resources/META-INF/nacos-db.sql) . 
+
+```shell
+
+# 创建容器并启动(开机自启动)
+docker run -d -p 8848:8848 --name nacos --restart always \
+-e MODE=standalone \
+-e PREFER_HOST_MODE=ip \
+-e SPRING_DATASOURCE_PLATFORM=mysql \
+-e MYSQL_SERVICE_HOST=192.168.5.106 \
+-e MYSQL_SERVICE_PORT=3306 \
+-e MYSQL_SERVICE_DB_NAME=nacos_config \
+-e MYSQL_SERVICE_USER=root \
+-e MYSQL_SERVICE_PASSWORD=123456 \
+-e MYSQL_DATABASE_NUM=1 \
+-v /docker/data/nacos/init.d/custom.properties:/home/nacos/init.d/custom.properties \
+-v /docker/data/nacos/logs:/home/nacos/logs \
+nacos/nacos-server
+
+docker ps
+
+```
 
 
-#### Nginx安装与配置
+### Nginx安装与配置
 
 创建配置文件目录：
 
@@ -492,163 +590,6 @@ sudo docker run --name nginx -p 80:80 \
 
 
 <br>
-
-
-
-#### nacos安装与配置
-
-注意服务器内存不足，启动后内存溢出问题（单机standalone模式默认服务器堆大小512M）[nacos官方文档](https://nacos.io/zh-cn/docs/what-is-nacos.html)
-
-```shell
-
-docker pull nacos/nacos-server
-
-# 创建本地的映射文件：custom.properties
-mkdir -p /docker/data/nacos/{init.d,logs}
-touch /docker/data/nacos/init.d/custom.properties
-
-cat > /docker/data/nacos/init.d/custom.properties << EOF
-management.endpoints.web.exposure.include=*
-EOF
-
-```
-
-<br>
-
-创建数据库 `nacos_config` :  创建nacos数据库后，然后执行下面的Sql 。 [nacos官网的Sql](https://github.com/alibaba/nacos/blob/master/config/src/main/resources/META-INF/nacos-db.sql) . 
-
-```shell
-
-# 创建容器并启动(开机自启动)
-docker run -d -p 8848:8848 --name nacos --restart always \
--e MODE=standalone \
--e PREFER_HOST_MODE=ip \
--e SPRING_DATASOURCE_PLATFORM=mysql \
--e MYSQL_SERVICE_HOST=192.168.5.106 \
--e MYSQL_SERVICE_PORT=3306 \
--e MYSQL_SERVICE_DB_NAME=nacos_config \
--e MYSQL_SERVICE_USER=root \
--e MYSQL_SERVICE_PASSWORD=123456 \
--e MYSQL_DATABASE_NUM=1 \
--v /docker/data/nacos/init.d/custom.properties:/home/nacos/init.d/custom.properties \
--v /docker/data/nacos/logs:/home/nacos/logs \
-nacos/nacos-server
-
-docker ps
-
-```
-
-
-
-<br>
-
-
-
-#### Zookeeper安装
-
-```shell
-
-docker pull zookeeper:3.4.13
-
-docker run -p 2181:2181 --name zookeeper --restart=always \
--v /docker/zookeeper/data:/data \
--d zookeeper:3.4.13
-
-```
-
-
-
-<br>
-
-
-
-### 4. docker run 命令详解
-
-常用关键参数OPTIONS 说明：
-
-```bash
-
--d:   # 后台运行容器，并返回容器ID；
--P:   # 随机端口映射，容器内部端口随机映射到主机的端口
--p:   # 指定端口映射，格式为：主机(宿主)端口:容器端口
-
--i:   # 以交互模式运行容器，通常与 -t 同时使用；
--t:   # 为容器重新分配一个伪输入终端，通常与 -i 同时使用
-
---restart ,      # 指定重启策略，可以写--restart=awlays 总是故障重启
---volume , -v:   # 绑定一个卷。一般格式 主机文件或文件夹:虚拟机文件或文件夹
-
-
---name="nginx-lb":         # 为容器指定一个名称；
---dns 8.8.8.8:             # 指定容器使用的DNS服务器，默认和宿主一致；
---dns-search example.com:  # 指定容器DNS搜索域名，默认和宿主一致；
--h "mars":                 # 指定容器的hostname；
-
--e username="ritchie":     # 设置环境变量；
---env-file=[]:             # 从指定文件读入环境变量；
-
---cpuset="0-2" or --cpuset="0,1,2":   # 绑定容器到指定CPU运行；
-
--m :             # 设置容器使用内存最大值；
---net="bridge":  # 指定容器的网络连接类型，支持 bridge/host/none/container: 四种类型；
-
---link=[]:       # 添加链接到另一个容器；
---expose=[]:     # 开放一个端口或一组端口；
-
-```
-
-<br>
-
-
-
-### 5. Docker容器内部操作
-docker exec ：在运行的容器中执行命令
-
-```bash
-docker exec -it <container ID> /bin/bash      # 进入容器内部
-exit                                          # 退出container (或者使用Ctrl + D)
-
-# 更改容器内系统的root密码
-docker exec -it <MyContainer> bash            # 进入后修改
-root@MyContainer:/# passwd
-Enter new UNIX password:
-Retype new UNIX password:
-```
-<br>
-
-### 6. 可视化界面-Portainer
-
-Portainer是功能强大的开源工具集，可让您轻松地在Docker，Swarm，Kubernetes和Azure ACI中构建和管理容器。 
-
-Portainer的工作原理是在易于使用的GUI后面隐藏使管理容器变得困难的复杂性。通过消除用户使用CLI，编写YAML或理解清单的需求，Portainer使部署应用程序和解决问题变得如此简单，任何人都可以做到。
-
-```bash
-
-sudo docker pull portainer/portainer-ce
-
-
-# 服务端部署
-
-sudo docker volume create portainer_data
-
-sudo docker run -d -p 8000:8000 -p 9000:9000 --name=portainer --restart=always \
--v /var/run/docker.sock:/var/run/docker.sock \
--v portainer_data:/data portainer/portainer-ce
-# 访问 9000 端口即可
-
-
-# agent端部署
-sudo docker run -d -p 9001:9001 --name portainer_agent --restart=always \
--v /var/run/docker.sock:/var/run/docker.sock \
--v /var/lib/docker/volumes:/var/lib/docker/volumes portainer/agent
-
-```
-
-
-
-
-<br>
-
 
 
 ## Dockerfile构建镜像
