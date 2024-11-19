@@ -97,12 +97,29 @@ systemctl daemon-reload && systemctl restart docker
 
 ```
 
-2. 自建镜像站
+2. 自建镜像加速
 
 视频教程参照：https://www.bilibili.com/video/BV13wDMYGECr
 
 Github仓库地址：https://github.com/jonssonyan/cf-workers-proxy
 
+在cloud flare配置好后（也可使用别的镜像配置），再配置docker即可：
+```bash
+sudo vim /etc/docker/daemon.json
+
+{
+"registry-mirrors" :
+    [
+        "https://ventixy.us.kg"
+    ]
+}
+```
+配置好后，重启Docker即可：
+```bash
+sudo systemctl daemon-reload
+
+sudo systemctl restart docker
+```
 
 
 
