@@ -6,8 +6,6 @@ title:  SQL语言基础
 ---
 
 
-## SQL基础介绍
-
 SQL：Structured Query Language（结构化查询语言），是用来操作关系型数据库的一门语言。
 
 SQL是一个关系型数据库的通用操作语言，也成为标准SQL，也叫SQL-92。
@@ -15,7 +13,7 @@ SQL是一个关系型数据库的通用操作语言，也成为标准SQL，也�
 ==**Create, Read, Update, and Delete 通常称为CRUD操作**==
 
 
-以下是几种常见的SQL语句类型：
+::: details 几种常见的SQL语句类型：
 
 1. **数据定义语言 (Data Definition Language, DDL)**
    - 用于创建、修改或删除数据库对象（如表、索引、视图等）。
@@ -75,11 +73,11 @@ SQL是一个关系型数据库的通用操作语言，也成为标准SQL，也�
      ```sql
      GRANT SELECT ON Customers TO 'username';
      ```
-
+:::
 
 	
 
-## DDL数据定义
+## 数据定义和操纵
 
 DDL（Data Definition Language），数据定义语言，用来**定义数据库对象：库、表、列** 
 
@@ -179,7 +177,7 @@ DDL可以定义数据库的结构，创建和删除数据库对象，并修改�
 
 
 
-## DML数据操纵
+### DML数据操纵
 
 DML（Data Manipulation Language）, 数据操作语言，用来定义数据库记录（数据）**增删改** 
 
@@ -795,7 +793,7 @@ SELECT * FROM Employees WHERE Name LIKE '%a%';
 
 
 
-## SQL查询语句执行顺序
+## 查询语句执行顺序
 
 SQL查询执行顺序：
 
