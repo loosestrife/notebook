@@ -552,10 +552,78 @@ EXPLAIN [EXTENDED] query;   -- `EXPLAIN`：显示查询的执行计划。
 
 
 
+### 开启慢查询日志
+
+MySQL 的慢查询日志（Slow Query Log）是一个非常有用的工具，可以帮助你识别那些执行时间较长的查询，从而优化数据库性能。
+
+::: tabs
+
+@tab:active 通过配置文件开启
+
+编辑 MySQL 的配置文件（通常是 `my.cnf` 或 `my.ini`），添加或修改以下配置项：
+
+```ini
+[mysqld]
+# 开启慢查询日志
+slow_query_log = 1
+
+# 指定慢查询日志文件的路径
+slow_query_log_file = /var/log/mysql/slow-query.log
+
+# 设置慢查询的阈值（单位：秒，默认为10s）
+long_query_time = 2
+
+# 记录不使用索引的查询
+log_queries_not_using_indexes = 1
+```
+
+保存配置文件后，重启 MySQL 服务使配置生效：
+
+```sh
+sudo systemctl restart mysql
+```
+
+@tab 通过动态配置开启
+
+如果你不想重启 MySQL 服务，可以通过动态配置来开启慢查询日志。登录到 MySQL 并执行以下命令：
+
+```sql
+-- 开启慢查询日志
+SET GLOBAL slow_query_log = 'ON';
+
+-- 指定慢查询日志文件的路径
+SET GLOBAL slow_query_log_file = '/var/log/mysql/slow-query.log';
+
+-- 设置慢查询的阈值（单位：秒）
+SET GLOBAL long_query_time = 2;
+
+-- 记录不使用索引的查询
+SET GLOBAL log_queries_not_using_indexes = 1;
+```
+:::
 
 
+慢查询日志文件通常是一个文本文件，你可以使用文本编辑器或命令行工具来查看。
+
+```sh
+less /var/log/mysql/slow-query.log
+
+# 或者使用 `tail` 命令查看最近的慢查询记录：
+tail -n 100 /var/log/mysql/slow-query.log
+```
 
 
+MySQL 提供了一个工具 `mysqldumpslow` 来分析慢查询日志。这个工具可以帮助你汇总和分析慢查询日志，找出最耗时的查询。
+
+```sh
+mysqldumpslow /var/log/mysql/slow-query.log
+```
+
+也可以使用第三方工具如 `pt-query-digest`（Percona Toolkit 的一部分）来分析慢查询日志：
+
+```sh
+pt-query-digest /var/log/mysql/slow-query.log
+```
 
 
 

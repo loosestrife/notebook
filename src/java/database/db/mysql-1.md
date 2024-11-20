@@ -10,20 +10,19 @@ MySQL5.7文档：https://dev.mysql.com/doc/refman/5.7/en/
 MySQL8.0文档：https://dev.mysql.com/doc/refman/8.0/en/ 
 
 
-## MySQL的安装和配置
+## MySQL安装和配置
 
 MySQL是一个C/S架构的软件，我们安装的MySQL 是服务端。
 
+::: tabs
 
-### Windows平台
+@tab Windows平台
 
 下载MySQL：https://dev.mysql.com/downloads/mysql/
 
 ![image-20220318112150056](vx_images/image-20220318112150056.png)
 
-
-
-::: info Windows平台下的安装步骤
+Windows平台下的安装步骤:
 
 将压缩包解压到需要安装的目录，然后执行以下步骤：
 
@@ -81,7 +80,6 @@ net stop mysql
 mysqld -remove mysql
 ```	
 最后删除MySQL目录及相关的环境变量即可
-:::
 
 
 
@@ -89,7 +87,7 @@ mysqld -remove mysql
 
 
 
-### WSL2-Ubuntu
+@tab:active WSL2-Ubuntu
 
 微软官网示例：https://learn.microsoft.com/zh-cn/windows/wsl/tutorials/wsl-database
 
@@ -113,14 +111,14 @@ sudo usermod -d /var/lib/mysql/ mysql    # 修改用户的主目录
 更多问题参照：[WSL2 Ubuntu 安装Mysql 避坑记录](https://zhuanlan.zhihu.com/p/654729453)
 
 
-### Linux手动安装
+@tab Linux手动安装
 
 下为Linux通用版本下载选项（Windows类似）：
 
 ![image-20220318084801233](vx_images/image-20220318084801233.png)
 
 
-::: info Linux平台手动安装MySql
+Linux平台手动安装MySql:
 
 目标：将 `mysql5.7` 安装到  `/usr/local/mysql` (不建议安装到其他位置，可能会导致socket连接失败)
 
@@ -197,7 +195,6 @@ mysql> alter user user() identified by "123456";
 >mysql status;                            # 查看mysql基本信息
 >mysql SHOW VARIABLES LIKE 'character%';  # 查看数据库字符集相关设置信息
 ```
-:::
 
 **Linux下的安装参考**：https://dev.mysql.com/doc/refman/5.7/en/binary-installation.html
 
@@ -245,11 +242,7 @@ mysql> flush   privileges;
 ```
 
 
-
-
-
-
-### Linux平台-RPM
+@tab Linux平台-RPM
 
 卸载MySQL：
 
@@ -299,7 +292,7 @@ rm -rf /usr/my.cnf
 
 通过以上几步，mysql应该已经完全卸载干净了.
 ```
-
+:::
 
 
 
@@ -404,58 +397,6 @@ quick
 max_allowed_packet = 16M
 ```
 
-
-
-
-### 重置root密码
-
-无论是在 MySQL 5.7 还是 MySQL 8.0 中，设置密码的方法基本相同：
-
-1. **登录 MySQL**
-
-   首先以 root 用户登录 MySQL：
-
-   ```sh
-   sudo mysql -u root -p
-   ```
-
-2. **设置密码**
-
-   使用 `ALTER USER` 语句设置 root 用户的密码：
-
-   ```sql
-   ALTER USER 'root'@'localhost' IDENTIFIED BY '新密码';
-   ```
-
-   或者，如果你需要为其他用户设置密码：
-
-   ```sql
-   CREATE USER '新用户名'@'localhost' IDENTIFIED BY '新密码';
-   ```
-
-   MySql5.7还可以使用下列方式：
-
-    ```bash
-    SET PASSWORD FOR 'username'@'localhost' = PASSWORD('新密码');
-    # 或者
-    SET PASSWORD FOR 'username'@'localhost' = '新密码';
-    ```
-
-3. **刷新权限**
-
-   为了确保新设置的密码立即生效，需要刷新权限：
-
-   ```bash
-   FLUSH PRIVILEGES;
-   ```
-
-4. **退出 MySQL**
-
-   退出 MySQL 命令行：
-
-   ```bash
-   EXIT;
-   ```
 
 
 
@@ -572,11 +513,6 @@ ESCAPED BY '\\' LINES TERMINATED BY '\n' FROM table_name;
 
 
 
-
-## DCL用户权限管理
-
-DCL（Data Control Language），   数据控制语言，用来定义**访问权限和安全级别** ，下为MySql常用的一些用户管理命令：
-
 ### 创建/删除用户
 
 **1. 创建用户**: 在 MySQL 中创建用户的基本语法如下：
@@ -606,6 +542,9 @@ DROP USER 'username'@'host';
 ```sql
 DROP USER 'newuser'@'%';
 ```
+
+
+
 
 ### MySQL用户表
 
@@ -656,6 +595,61 @@ ALTER USER 'username'@'host' ACCOUNT UNLOCK;                        -- 启用用
 
 DROP USER 'username'@'host';                                        -- 删除用户
 ```
+
+
+
+
+### 重置root密码
+
+无论是在 MySQL 5.7 还是 MySQL 8.0 中，设置密码的方法基本相同：
+
+1. **登录 MySQL**
+
+   首先以 root 用户登录 MySQL：
+
+   ```sh
+   sudo mysql -u root -p
+   ```
+
+2. **设置密码**
+
+   使用 `ALTER USER` 语句设置 root 用户的密码：
+
+   ```sql
+   ALTER USER 'root'@'localhost' IDENTIFIED BY '新密码';
+   ```
+
+   或者，如果你需要为其他用户设置密码：
+
+   ```sql
+   CREATE USER '新用户名'@'localhost' IDENTIFIED BY '新密码';
+   ```
+
+   MySql5.7还可以使用下列方式：
+
+    ```bash
+    SET PASSWORD FOR 'username'@'localhost' = PASSWORD('新密码');
+    # 或者
+    SET PASSWORD FOR 'username'@'localhost' = '新密码';
+    ```
+
+3. **刷新权限**
+
+   为了确保新设置的密码立即生效，需要刷新权限：
+
+   ```bash
+   FLUSH PRIVILEGES;
+   ```
+
+4. **退出 MySQL**
+
+   退出 MySQL 命令行：
+
+   ```bash
+   EXIT;
+   ```
+
+
 
 
 
