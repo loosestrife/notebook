@@ -773,7 +773,404 @@ jdbc:mysql://hostname:3306/db_name?useSSL=false&allowPublicKeyRetrieval=true&ser
 
 
 
-## MySQL基础及应用
+## MySQL理论及应用
+
+
+
+### MySQL日志管理
+
+MySQL 中的日志管理是数据库管理和故障恢复的重要组成部分。包括二进制日志（Binary Log）、重做日志（Redo Log）、回滚日志（Undo Log）等。
+
+- **二进制日志（Binary Log）**：记录所有更改操作，用于数据恢复和主从复制。
+- **重做日志（Redo Log）**：记录事务的更改，用于事务持久性和崩溃恢复。
+- **回滚日志（Undo Log）**：记录事务开始时的数据快照，用于事务回滚和多版本并发控制。
+- **错误日志（Error Log）**：记录服务器的错误和警告信息。
+- **慢查询日志（Slow Query Log）**：记录执行时间超过阈值的查询语句。
+- **查询日志（General Query Log）**：记录所有客户端发送的查询语句。
+
+::: tabs
+
+@tab 二进制日志
+
+二进制日志记录了所有对数据库的更改操作，包括数据修改（如 `INSERT`、`UPDATE`、`DELETE`）和结构修改（如 `CREATE`、`ALTER`）。这些日志以二进制格式存储，主要用于数据恢复、主从复制和审计。
+
+在 MySQL 配置文件（通常是 `my.cnf` 或 `my.ini`）中启用二进制日志：
+
+```ini
+[mysqld]
+log_bin = /path/to/binlog/mysql-bin.log
+server_id = 1
+```
+
+- **查看当前二进制日志文件**：
+  ```sql
+  SHOW MASTER LOGS;
+  ```
+
+- **查看二进制日志内容**：
+  ```sh
+  mysqlbinlog /path/to/binlog/mysql-bin.000001
+  ```
+
+- **清除旧的二进制日志**：
+  ```sql
+  PURGE BINARY LOGS TO 'mysql-bin.000005';
+  PURGE BINARY LOGS BEFORE '2023-10-01 00:00:00';
+  ```
+
+@tab 重做日志
+
+重做日志是 InnoDB 存储引擎特有的日志，用于实现事务的持久性和崩溃恢复。每次事务提交时，InnoDB 会将事务的更改记录到重做日志中。如果数据库发生崩溃，可以通过重做日志恢复未完成的事务。
+
+重做日志的配置参数包括日志文件的数量和大小：
+
+```ini
+[mysqld]
+innodb_log_file_size = 512M
+innodb_log_files_in_group = 2
+```
+
+- **初始化或更改重做日志大小**：需要先关闭 MySQL 服务，删除现有的重做日志文件，然后重新启动 MySQL 服务。
+  ```sh
+  systemctl stop mysql
+  rm -f /var/lib/mysql/ib_logfile*
+  systemctl start mysql
+  ```
+
+@tab:active 回滚日志
+
+回滚日志也是 InnoDB 存储引擎特有的日志，用于实现事务的回滚和多版本并发控制（MVCC）。每个事务开始时，InnoDB 会记录事务开始时的数据快照，以便在事务回滚或读取历史版本数据时使用。
+
+回滚日志的配置参数包括日志段的数量和大小：
+
+```ini
+[mysqld]
+innodb_undo_tablespaces = 2
+innodb_undo_logs = 128
+```
+
+- **回滚日志的空间管理**：长时间运行的事务可能会导致回滚日志空间占用过大，可以通过调整 `innodb_max_undo_log_size` 参数来控制最大回滚日志大小。
+
+
+@tab 错误日志
+
+错误日志记录了 MySQL 服务器的错误信息、警告信息和启动信息。这些信息对于诊断和解决数据库问题非常有用。
+
+在 MySQL 配置文件中启用错误日志：
+
+```ini
+[mysqld]
+log_error = /path/to/error.log
+```
+
+- **查看错误日志**：
+  ```sh
+  cat /path/to/error.log
+  ```
+
+@tab 慢查询日志
+
+慢查询日志记录了执行时间超过指定阈值的查询语句。这些日志有助于识别和优化性能瓶颈。
+
+在 MySQL 配置文件中启用慢查询日志：
+
+```ini
+[mysqld]
+slow_query_log = 1
+slow_query_log_file = /path/to/slow-query.log
+long_query_time = 2
+```
+
+- **查看慢查询日志**：
+  ```sh
+  cat /path/to/slow-query.log
+  ```
+
+- **动态启用或禁用慢查询日志**：
+  ```sql
+  SET GLOBAL slow_query_log = 'ON';
+  SET GLOBAL slow_query_log = 'OFF';
+  ```
+
+@tab 查询日志
+
+查询日志记录了所有客户端发送到服务器的查询语句。这些日志对于调试和审计非常有用。
+
+在 MySQL 配置文件中启用查询日志：
+
+```ini
+[mysqld]
+general_log = 1
+general_log_file = /path/to/general-query.log
+```
+
+- **查看查询日志**：
+  ```sh
+  cat /path/to/general-query.log
+  ```
+
+- **动态启用或禁用查询日志**：
+  ```sql
+  SET GLOBAL general_log = 'ON';
+  SET GLOBAL general_log = 'OFF';
+  ```
+:::
+
+
+
+
+
+
+### MVCC机制
+
+
+多版本并发控制（Multi-Version Concurrency Control，简称 MVCC）是现代数据库系统中一种重要的并发控制机制，尤其在事务处理中发挥着关键作用。
+
+MySQL 的 InnoDB 存储引擎实现了 MVCC，InnoDB 存储引擎在每个数据行中添加了几个隐藏字段，用于支持 MVCC：
+
+- **DB_TRX_ID**：记录最后一次对该行进行插入或更新的事务ID。
+- **DB_ROLL_PTR**：指向该行的回滚段（undo log）的指针，用于找到该行的旧版本。
+
+::: info MVCC机制核心概念
+#### 1. 回滚日志（Undo Log）
+
+- **插入回滚段**：记录插入操作的旧版本，用于回滚。
+- **更新回滚段**：记录更新操作的旧版本，用于回滚和多版本并发控制。
+
+#### 2. 读视图（Read View）
+
+读视图是一个事务在开始时创建的一个快照，记录了当前活动事务的ID列表。读视图包含以下几个重要信息：
+
+- **m_ids**：当前活动事务的ID列表。
+- **min_trx_id**：最小的活动事务ID。
+- **max_trx_id**：最大的活动事务ID。
+- **creator_trx_id**：创建读视图的事务ID。
+
+#### 3. 版本链（Version Chain）
+
+每个数据行都有一个版本链，记录了该行的历史版本。版本链中的每个版本都包含一个事务ID（TXID），表示该版本是由哪个事务创建的。版本链中的每个版本还包含指向下一个版本的指针。
+
+#### 4. 当前事务ID的比较规则
+
+在 `Repeatable Read` 隔离级别下，判断某个版本是否对当前事务可见的规则如下：
+
+1. **版本的事务ID小于读视图的最小事务ID**：版本对当前事务可见。
+2. **版本的事务ID大于读视图的最大事务ID**：版本对当前事务不可见。
+3. **版本的事务ID在读视图的活动事务ID列表中**：版本对当前事务不可见。
+
+:::
+
+
+::: details MVCC 机制的工作流程示例
+假设有一个表 `employees`，初始状态如下：
+```
+| id | name  | salary | DB_TRX_ID | DB_ROLL_PTR |
+|----|-------|--------|-----------|-------------|
+| 1  | Alice | 50000  | 0         | NULL        |
+```
+
+#### 事务1开始
+```sql
+BEGIN;
+```
+
+#### 事务1更新数据
+```sql
+UPDATE employees SET salary = 60000 WHERE id = 1;
+```
+
+此时，表的状态变为：
+```
+| id | name  | salary | DB_TRX_ID | DB_ROLL_PTR |
+|----|-------|--------|-----------|-------------|
+| 1  | Alice | 60000  | 1         | ptr1        |
+```
+
+- **DB_TRX_ID**：1（事务1的ID）
+- **DB_ROLL_PTR**：ptr1（指向旧版本的指针）
+
+旧版本存储在回滚段中：
+```
+| id | name  | salary | DB_TRX_ID | DB_ROLL_PTR |
+|----|-------|--------|-----------|-------------|
+| 1  | Alice | 50000  | 0         | NULL        |
+```
+
+#### 事务2开始
+```sql
+BEGIN;
+```
+
+#### 事务2查询数据
+```sql
+SELECT * FROM employees WHERE id = 1;
+```
+
+##### 处理流程
+1. **事务2创建读视图**：
+   - **m_ids**：[1] （当前系统中未提交的事务ID列表）
+   - **min_trx_id**：1 （m_ids 列表中的最小值）
+   - **max_trx_id**：1 （m_ids 列表中的最大值）
+   - **creator_trx_id**：2（创建读视图的事务ID）
+
+2. **事务2查找数据行**：
+   - 当前数据行的版本：
+     ```
+     | id | name  | salary | DB_TRX_ID | DB_ROLL_PTR |
+     |----|-------|--------|-----------|-------------|
+     | 1  | Alice | 60000  | 1         | ptr1        |
+     ```
+   - DB_TRX_ID （1）是否小于读视图的最小事务ID（1）：不是。 --> 不可见
+   - DB_TRX_ID （1）是否大于读视图的最大事务ID（1）：不是。
+   - DB_TRX_ID （1）是否在读视图的活动事务ID列表中（[1]）：是。
+   - 因此，当前版本对事务2不可见。
+
+3. **事务2查找旧版本**：
+   - 通过 **DB_ROLL_PTR**（ptr1）找到旧版本：
+     ```
+     | id | name  | salary | DB_TRX_ID | DB_ROLL_PTR |
+     |----|-------|--------|-----------|-------------|
+     | 1  | Alice | 50000  | 0         | NULL        |
+     ```
+   - 检查旧版本的事务ID（0）是否小于等于读视图的最小事务ID（1）：是。
+   - 因此，旧版本对事务2可见。
+
+4. **事务2返回查询结果**：
+   ```
+   | id | name  | salary |
+   |----|-------|--------|
+   | 1  | Alice | 50000  |
+   ```
+:::
+
+
+在 MySQL InnoDB 存储引擎中，`读已提交`（Read Committed，RC）和`可重复读`（Repeatable Read，RR）的本质区别：
+
+- **读已提交（RC）**：==每次查询创建新的读视图==，事务内的多次查询可能会看到不同的数据版本。
+- **可重复读（RR）**：事务开始时创建读视图，事务内的多次查询会看到相同的快照。
+
+因此在MVCC机制中，在可重复读隔离级别下同一个事务内多次查询使用的均是同一个视图，解决了不可重读的问题。
+
+需要注意的是，这里在第二个事务中均是读数据的操作，若要更新数据，是需要对记录加锁的，否则可能会导致数据最终不正确。
+
+
+
+
+
+### MySQL锁的分类
+
+在 MySQL 中，锁机制是保证数据一致性和并发控制的重要手段。根据不同的角度，MySQL 中的锁可以分为多种类型。
+
+::: info MySQL-Lock
+
+#### 1. 按照锁的粒度分类
+
+- 表级锁（Table-Level Locks）: 锁住整张表，影响范围较大，但开销较小。
+  可以通过 `LOCK TABLES` 和 `UNLOCK TABLES` 显式地对表进行加锁和解锁。
+- 行级锁（Row-Level Locks）: 锁住表中的特定行，影响范围较小，但开销较大。
+  可以通过 `SELECT ... FOR UPDATE` 或 `SELECT ... FOR SHARE` 显式地对行进行加锁。
+    ```sql
+    SELECT * FROM table_name WHERE id = 1 FOR UPDATE;
+    SELECT * FROM table_name WHERE id = 1 FOR SHARE;
+    ```
+- 页面锁（Page-Level Locks）: 锁住表中的特定页面，介于表级锁和行级锁之间。
+  在 BDB 存储引擎中使用页面锁，但现在很少使用 BDB 存储引擎。
+
+#### 2. 按照锁的性质分类
+
+- 共享锁（Shared Locks，S 锁）: 允许多个事务同时持有共享锁
+  可以通过 `SELECT ... FOR SHARE` 显式地获取共享锁。
+    ```sql
+    SELECT * FROM table_name WHERE id = 1 FOR SHARE;
+    ```
+- 排他锁（Exclusive Locks，X 锁）：只允许一个事务持有排他锁，阻止其他事务的任何操作。
+  可以通过 `SELECT ... FOR UPDATE` 显式地获取排他锁。
+    ```sql
+    SELECT * FROM table_name WHERE id = 1 FOR UPDATE;
+    ```
+- 意向锁（Intent Locks）: 表示对表或页面的锁定意图。在 InnoDB 存储引擎中自动使用。
+  - **意向共享锁（IS 锁）**：表示事务打算对表中的某些行获取共享锁。
+  - **意向排他锁（IX 锁）**：表示事务打算对表中的某些行获取排他锁。
+
+
+#### 3. 按照锁的作用范围分类
+
+- 记录锁（Record Locks）: 锁住索引记录。
+- 间隙锁（Gap Locks）: 锁住索引记录之间的间隙。在 InnoDB 存储引擎中自动使用，主要用于防止幻读。
+- 临键锁（记录+间隙锁）（Next-Key Locks）：同时锁住索引记录和其前一个间隙。在 InnoDB 存储引擎中自动使用，主要用于防止幻读。
+:::
+
+在 MySQL InnoDB 存储引擎中，间隙锁（Gap Locks）和临键锁（Next-Key Locks）是用于解决幻读问题的关键机制。
+
+- **间隙锁**：锁住索引记录之间的间隙，而不是具体的记录。防止其他事务在这段间隙中插入新的记录
+  - 锁住的范围：间隙锁锁住的是索引记录之间的空白区域。
+  例：假设有一个索引包含以下记录：1, 4, 7。间隙锁可以锁住以下间隙：
+  `(负无穷, 1)  (1, 4)  (4, 7)  (7, 正无穷)`
+  - 在 `可重复读`（Repeatable Read）隔离级别下，InnoDB 自动使用间隙锁来防止幻读。通常不需要手动使用间隙锁，但可以通过 `SELECT ... FOR UPDATE`间接触发。
+
+- **临键锁**：同时锁住索引记录和其前一个间隙。临键锁是记录锁和间隙锁的组合。
+  - 锁住的范围：临键锁不仅锁住具体的索引记录，还锁住该记录之前的所有间隙。
+    例：假设有一个索引包含以下记录：1, 4, 7。临键锁可以锁住以下范围：
+    ` (负无穷, 1]（包括1） (1, 4]（包括4）(4, 7]（包括7）(7, 正无穷]`
+  - 在 `可重复读`（Repeatable Read）隔离级别下，InnoDB 自动使用临键锁来防止幻读。通常不需要手动使用临键锁，但可以通过 `SELECT ... FOR UPDATE`间接触发。
+
+
+
+
+**如何解决幻读**：在一个事务中，多次执行相同的查询，但结果集却不同。这是因为其他事务在这段时间内插入了新的记录。而间隙锁和临键锁的作用：
+- **防止插入新记录**：通过锁住索引记录之间的间隙，间隙锁和临键锁可以防止其他事务在这段间隙中插入新的记录。
+- **保持事务的一致性**：确保事务内的多次查询结果一致，避免幻读现象。
+
+
+::: details 解决幻读示例
+假设有一个表 `employees`，初始状态如下：
+```
+| id | name  | salary |
+|----|-------|--------|
+| 1  | Alice | 50000  |
+| 4  | Bob   | 60000  |
+| 7  | Carol | 70000  |
+```
+
+1. **事务1开始**
+   ```sql
+   BEGIN;
+   ```
+
+2. **事务1查询数据**
+   ```sql
+   SELECT * FROM employees WHERE id BETWEEN 1 AND 7 FOR SHARE;
+   ```
+   - 事务1获取了临键锁，锁住了 (负无穷, 1]、(1, 4] 和 (4, 7]。
+
+3. **事务2开始**
+   ```sql
+   BEGIN;
+   ```
+
+4. **事务2尝试插入数据**
+   ```sql
+   INSERT INTO employees (id, name, salary) VALUES (5, 'David', 55000);
+   ```
+   - 由于事务1已经锁住了 (4, 7]，事务2会被阻塞，直到事务1提交或回滚。
+
+5. **事务1提交**
+   ```sql
+   COMMIT;
+   ```
+
+6. **事务2再次尝试插入数据**
+   ```sql
+   INSERT INTO employees (id, name, salary) VALUES (5, 'David', 55000);
+   ```
+   - 事务2成功插入数据，因为事务1已经提交，临键锁被释放。
+:::
+
+通过使用临键锁，InnoDB 存储引擎在 `可重复读` 隔离级别下有效地解决了幻读问题。
+
+
+
+
 
 ### MySQL数据类型
 
