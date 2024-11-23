@@ -2,7 +2,7 @@
 dir:
     order: 1
 index: false
-title: 关系型数据库
+title: 常用数据库
 
 ---
 

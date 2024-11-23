@@ -197,6 +197,15 @@ dir *lastUpdated /S
  然后尝试重新reload(可能需要重启IDEA)
 :::
 
+<br/>
+
+IDEA中无法查看源码及文档，尝试再对应Pom.xml文件所在目录执行：
+```bash
+mvn dependency:sources
+```
+
+
+
 
 ## Maven核心及生命周期
 

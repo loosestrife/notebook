@@ -1,6 +1,6 @@
 ---
 
-order: 20
+order: 60
 title:  Java操作Redis
 
 ---

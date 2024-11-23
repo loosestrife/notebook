@@ -125,7 +125,7 @@ sudo systemctl restart docker
 
 ### Docker基础命令
 
-[Docker官网—常用命令](https://docs.docker.com/engine/reference/commandline/docker/) —— [Docker Hub](https://hub.docker.com/)
+[Docker官网—常用命令](https://docs.docker.com/engine/reference/commandline/docker/) 
 
 ```shell
 docker version
@@ -248,7 +248,7 @@ docker volume rm xxx       # 删除指定的数据卷
 ## 常用镜像安装和配置
 
 如何使用Docker部署组件：
-1、先去找组件的镜像
+1、先去找组件的镜像—— [Docker Hub](https://hub.docker.com/)
 2、查看镜像文档，了解组件的可配置内容
 3、docker run进行部署
 

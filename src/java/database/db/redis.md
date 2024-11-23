@@ -1,22 +1,25 @@
 ---
 
-order: 1
+order: 50
 title:  Redis数据缓存
 
 ---
 
 
-## 一 Redis安装与配置
+## Redis安装与配置
 
-Redis官网：https://redis.io/
+
+### Redis的安装
+
+ 通过[redis官网](https://redis.io/)下载上传至服务器，或通过wget直接下载
+
+ Redis官网：https://redis.io/
 
 AnotherRedisDesktopManager：[Gitee下载地址](https://gitee.com/qishibo/AnotherRedisDesktopManager/releases) 
 
-<br/>
+::: tabs
 
-### 1. Redis的安装
-
- 通过[redis官网](https://redis.io/)下载上传至服务器，或通过wget直接下载
+@tab 通过源码安装
 
 ```shell
 
@@ -39,18 +42,11 @@ make && make install
 
 ```
 
-<br/>
-
-
-
 不报错的话就已经在 /usr/local/bin/ 目录下生成了 redis-server 执行文件
 
 如果是普通 (非root用户) 应该会报下面错误:
 
 ![image-20220402194342248](../db/vx_images/image-20220402194342248.png)
-
-<br/>
-
 
 
 这时需要手动复制一些文件到指定目录
@@ -60,73 +56,150 @@ make && make install
 ```shell
 
 sudo mkdir -p /usr/local/redis/bin/      # sudo mkdir -p /usr/local/redis/bin/   
-
 sudo mkdir -p /usr/local/redis/conf/     # 存放配置文件目录
-
 
 # 然后将Redis src下的编译好的可执行文件拷贝到 /usr/local/redis/bin/
 #                           配置文件拷贝到 /usr/local/redis/conf/
-
 cd /usr/local/redis/redis-6.2.6/src
-
 sudo cp redis-server redis-cli /usr/local/redis/bin/
 sudo cp ../redis.conf /usr/local/redis/conf/
 
-
-
 # 此时已经可以启动Redis了
-
 cd /usr/local/redis
-./bin/redis-server ./conf/redis.conf &      # ctrl+c正常会中断程序,加上&之后ctrl+c程序也不会退出
-
+./bin/redis-server ./conf/redis.conf &      
+# ctrl+c正常会中断程序,加上&之后ctrl+c程序也不会退出
 ^C
-
 ```
-
-
 
 启动客户端连接试试：
 
 ![image-20220402202046595](../db/vx_images/image-20220402202046595.png)
 
-<br/>
-
-
-
 ```shell
 
 # 这里先关闭 redis-server, 因为下面需要修改其配置文件
-
 ps -ef|grep redis 
-
 kill -9 pid
 
-```
-
-
-
-<br/>
-
-
-
-### 2. Redis基础配置 
-
-```shell
 
 # 修改配置文件之前别忘了先备份 
-
 sudo cp /usr/local/redis/conf/redis.conf /usr/local/redis/conf/redis.conf.backup
 
-
 # 修改redis.conf
-
 sudo vim /usr/local/redis/conf/redis.conf
+```
+
+**Redis服务启动**
+
+redis安装包的 utils 目录下有一些便捷的服务脚本，如：`redis_init_script` , `systemd-redis_server.service` 
+
+分别为 `/etc/init.d/xxx` 脚本 , 和 systemctl 的脚本，
+
+ **systemd的方式** （未配置成功，待解决......）: 
+>
+> 注：（ 个人查看Ubuntu下的目录是 `/lib/systemd/system`， 但很多资料说的是 /usr/lib/systemd/system  ）
+>
+> 对于那些支持 Systemd 的软件，安装的时候，会自动在`/usr/lib/systemd/system`目录添加一个配置文件。
+>
+> 如果你想让该软件开机启动，就执行下面的命令（以`httpd.service`为例）。
+>
+> > ```bash
+> > $ sudo systemctl enable httpd
+> > ```
+>
+> 上面的命令相当于在`/etc/systemd/system` 目录添加一个符号链接，指向`/usr/lib/systemd/system` 里面的`httpd.service`文件。
+>
+> 这是因为开机时，`Systemd`只执行`/etc/systemd/system`目录里面的配置文件。
+>
+> 这也意味着，如果把修改后的配置文件放在该目录，就可以达到覆盖原始配置的效果
+>
+> systemd有系统和用户区分：
+>
+> **系统（/user/lib/systemd/system/）**、**用户（/etc/lib/systemd/user/）** 
+>
+> 一般系统管理员手工创建的单元文件建议存放在/etc/systemd/system/目录下面。
+>
+> /usr/lib/systemd/system目录自动存放启动文件的配置位置，里面一般包含有XXXXX.service
+>
+
+下面使用 systemd 的方式创建 Redis 的开机自启服务：
+
+```shell
+# 先将安装包下的 systemd 服务文件复制到 上述所说的位置
+sudo cd /usr/local/redis/redis-6.2.6/utils/
+sudo cp systemd-redis_server.service /usr/lib/systemd/user/redis-server.service
+
+
+#修改配置文件位置
+ 
+sudo vim /usr/lib/systemd/user/reids-server.service
+	ExecStart=/usr/local/redis/bin/redis-server /usr/local/redis/conf/redis.conf --supervised systemd --daemonize yes
+   
+# 开机自启动
+sudo systemctl enable redis-server.service
+sudo systemctl start redis-server.service         # 启动
+```
+
+
+**init方式**：
+
+```shell
+# 复制 init 脚本到 /etc/init.d/ 下
+cd /usr/local/redis/redis-6.2.6/utils/
+
+sudo cp ./redis_init_script /etc/init.d/redis-server.service
+
+# 修改脚本内容
+
+sudo vim /etc/init.d/redis-server.service 
+
+    EXEC=/usr/local/redis/bin/redis-server
+    CLIEXEC=/usr/local/redis/bin/redis-cli
+
+    CONF="/usr/local/redis/conf/redis.conf"
+
+update-rc.d redis-server.service defaults 90       #开启自启动 
+
+/etc/init.d/redis-server.service start             # 启动
+     
+ps -ef|grep redis
+
+sudo kill -9 pid                                   # 关闭
 
 ```
+
+
+@tab:active Docker安装
+
+这里采用快捷的安装方式，更详细的安装方式参照：[redis的安装](/tool/Docker/Docker.md#redis安装与配置)
+```bash
+docker pull redis:7.4.1
+
+sudo mkdir -p /docker/redis/conf /docker/redis/data && \
+sudo touch /docker/redis/conf/redis.conf
+
+docker run -p 6379:6379 --name my-redis7 --restart=always \
+ -v /docker/redis/conf/redis.conf:/etc/redis/redis.conf \
+ -v /docker/redis/data:/data \
+ -d redis:7.4.1 redis-server /etc/redis/redis.conf
+```
+
+进入容器内部：
+```bash
+docker exec -it my-redis7 /bin/bash
+
+exit
+```
+:::
+
+
+
+
+### Redis常用配置 
+
 redis.conf : 
 
 ```shell 
-
 daemonize yes                       # 让redis启动后在后台运行
 
 dir /usr/local/redis/db             # 修改redis的工作目录 (持久化文件的路径) sudo mkdir db
@@ -151,165 +224,23 @@ database 16
 ```
 
 
-<br/>
-
-```shell
-
-# 此时再启动即可使用远程密码连接
-
-./bin/redis-server ./conf/redis.conf
 
 
-# 测试完后同样 kill 掉 Redis 服务，下面还要进行自启动等服务配置
-
-```
-
-
-
-<br/>
-
-
-
-### 3. Redis服务启动
-
-redis安装包的 utils 目录下有一些便捷的服务脚本，如：`redis_init_script` , `systemd-redis_server.service` 
-
-分别为 `/etc/init.d/xxx` 脚本 , 和 systemctl 的脚本，
-
-<br/>
-
-
-
- **systemd的方式** （未配置成功，待解决......）: 
-
-> 
->
-> 注：（ 个人查看Ubuntu下的目录是 `/lib/systemd/system`， 但很多资料说的是 /usr/lib/systemd/system  ）
->
-> 
->
-> 对于那些支持 Systemd 的软件，安装的时候，会自动在`/usr/lib/systemd/system`目录添加一个配置文件。
->
-> 如果你想让该软件开机启动，就执行下面的命令（以`httpd.service`为例）。
->
-> > ```bash
-> > $ sudo systemctl enable httpd
-> > ```
->
-> 上面的命令相当于在`/etc/systemd/system` 目录添加一个符号链接，指向`/usr/lib/systemd/system` 里面的`httpd.service`文件。
->
-> 这是因为开机时，`Systemd`只执行`/etc/systemd/system`目录里面的配置文件。
->
-> 这也意味着，如果把修改后的配置文件放在该目录，就可以达到覆盖原始配置的效果
->
-> 
->
-> systemd有系统和用户区分：
->
-> **系统（/user/lib/systemd/system/）**、**用户（/etc/lib/systemd/user/）** 
->
-> 一般系统管理员手工创建的单元文件建议存放在/etc/systemd/system/目录下面。
->
-> /usr/lib/systemd/system目录自动存放启动文件的配置位置，里面一般包含有XXXXX.service
->
-> 
-
-<br/>
-
-
-
-下面使用 systemd 的方式创建 Redis 的开机自启服务：
-
-```shell
-
-# 先将安装包下的 systemd 服务文件复制到 上述所说的位置
-
-sudo cd /usr/local/redis/redis-6.2.6/utils/
-
-sudo cp systemd-redis_server.service /usr/lib/systemd/user/redis-server.service
-
-
-
-#修改配置文件位置
- 
-sudo vim /usr/lib/systemd/user/reids-server.service
-
-	ExecStart=/usr/local/redis/bin/redis-server /usr/local/redis/conf/redis.conf --supervised systemd --daemonize yes
-   
-   
-
-# 开机自启动
-
-sudo systemctl enable redis-server.service
-
-sudo systemctl start redis-server.service         # 启动
-
-```
-
-
-<br/>
-
-
-
-**init方式**：
-
-```shell
-
-# 复制 init 脚本到 /etc/init.d/ 下
-
-cd /usr/local/redis/redis-6.2.6/utils/
-
-sudo cp ./redis_init_script /etc/init.d/redis-server.service
-
-
-# 修改脚本内容
-
-sudo vim /etc/init.d/redis-server.service 
-
-    EXEC=/usr/local/redis/bin/redis-server
-    CLIEXEC=/usr/local/redis/bin/redis-cli
-
-    CONF="/usr/local/redis/conf/redis.conf"
-
-
-update-rc.d redis-server.service defaults 90       #开启自启动 
-
-
-/etc/init.d/redis-server.service start             # 启动
-         
-
-ps -ef|grep redis
-
-sudo kill -9 pid                                   # 关闭
-
-```
-
-
-
-<br/>
-
-
+### redis-cli
 
 启动redis客户端： `redis-cli`
 
 ```shell
-
 redis-cli                         # 启动
 
 redis-cli -a password shutdown    # 关闭
 
 redis-cli -a password ping        # 查看是否存活 PONG表示正常
-
 ```
-
-
-
-<br/>
 
 `redis-cli`的基本使用：
 
-```shell
-
+```bash
 > auth password    # 类似登录（必须输入密码）
 
 > set name tom     # OK          设置name的值为tom
@@ -329,9 +260,10 @@ redis-cli -a password ping        # 查看是否存活 PONG表示正常
 
 
 
+
 <br/>
 
-### 4. Redis命令中心
+### Redis命令中心
 
  Redis命令十分丰富，包括的命令组有Cluster、Connection、Geo、Hashes、HyperLogLog、Keys、Lists、Pub/Sub、Scripting、Server、Sets、Sorted Sets、Strings、Transactions一共14个redis命令组两百多个redis命令
 
@@ -365,7 +297,7 @@ Redis Commands：https://redis.io/commands/
 
 
 
-## 二  Redis持久化配置
+### Redis持久化
 
 Redis持久化存储有两种持久化方案：RDB（Redis DataBase）和AOF（Append-Only File）。
 
@@ -384,8 +316,9 @@ Redis 4之后支持AOF+RDB混合持久化的方式，结合了两者的优点，
 <br/>
 
 
+::: tabs
 
-### 1. RDB持久化
+@tab RDB持久化
 
 RDB（Redis DataBase）是将Redis内存中数据的快照写⼊到⼆进制⽂件中，是Redis的默认持久化方案。
 
@@ -465,17 +398,11 @@ RDB全量备份总是非常耗时的，而且不能提供强一致性（Strict C
 
 - 在默认情况下，RDB数据持久化实时性比较差，而配置为高时效性时，频繁操作的成本则会很高
 
-
-
 适⽤于容灾备份 、全量复制
 
 
 
-<br/>
-
-
-
-### 2. AOF持久化
+@tab AOF持久化
 
 AOF（Append Only File）以独立日志的方式记录每次的写命令，可以很好地解决了数据持久化的实时性。
 
@@ -501,7 +428,6 @@ auto-aof-rewrite-percentage 100
 
 # aof文件大小超过64MB时触发重写
 auto-aof-rewrite-min-size 64mb 
-
 
 // aof 持久化策略，任选一个，默认是everysec
 # appendfsync always
@@ -532,14 +458,9 @@ AOF文件会以文本格式保存所有写操作命令，且未经压缩，因�
 ```
 
 
+@tab:active 混合持久化
 
-<br/>
-
-
-
-### 3. 混合持久化
-
-RDB和AOF持久化的区别：
+RDB和AOF持久化的区别：使用RDB持久化会有数据丢失的风险，但是数据恢复的速度快；使用AOF持久化可以保证数据的完整性，但数据恢复的速度慢。
 
 | 特性 \ 方式 | RDB（Redis DataBase）    | AOF（Append Only File） |
 | ----------- | ------------------------ | ----------------------- |
@@ -548,78 +469,38 @@ RDB和AOF持久化的区别：
 | 恢复性能    | 速度快                   | 速度慢                  |
 | 数据安全性  | 丢失上次保存点之后的数据 | 因配置策略而不同        |
 
-<br/>
-
-使用RDB持久化会有数据丢失的风险，但是数据恢复的速度快；使用AOF持久化可以保证数据的完整性，但数据恢复的速度慢。
-
-在Redis 4之后的版本新增了AOF+RDB混合模式，先使用RDB存储快照，然后使用AOF持久化记录所有的写操作，当满足重写策略或手动触发重写的时候，将最新的数据存储为新的RDB记录。
-
-重启服务时会从RDB和AOF两部分恢复数据，既保证了数据的完整性，又提高了数据恢复的性能。
+在Redis 4之后的版本新增了AOF+RDB混合模式，先使用RDB存储快照，然后使用AOF持久化记录所有的写操作，当满足重写策略或手动触发重写的时候，将最新的数据存储为新的RDB记录。重启服务时会从RDB和AOF两部分恢复数据，既保证了数据的完整性，又提高了数据恢复的性能。
 
 
 
 开启AOF+RDB混合模式持久化的配置命令如下：
 
 ```shell
-
 # redis.conf
-
 aof-use-rdb-preamble yes
-
 ```
 
-只要在redis.conf配置文件中写入上面这行代码就可以开启AOF+RDB混合模式。(注意此模式在Redis 4及以上版本才支持)
+只要在redis.conf配置文件中写入上面这行代码就可以开启AOF+RDB混合模式。(注意此模式在Redis 4及以上版本才支持)。在 redis 4 刚引入时，默认是关闭混合持久化的，但是在 redis 5 中默认已经打开了。
 
-在 redis 4 刚引入时，默认是关闭混合持久化的，但是在 redis 5 中默认已经打开了。
+混合持久化并不是一种全新的持久化方式，而是对已有方式的优化。混合持久化只发生于 AOF 重写过程。使用了混合持久化，重写后的新 AOF 文件前半段是 RDB 格式的全量数据，后半段是 AOF 格式的增量数据。
 
+- 开启混合模式后，在bgrewriteaof命令之后会在AOF文件中以RDB格式写入当前最新的数据，之后的写操作继续以AOF的追加形式追加写命令。当Redis重启的时候，先加载RDB的部分再加载剩余的AOF部分。
 
-
-<br/>
-
-混合持久化并不是一种全新的持久化方式，而是对已有方式的优化。混合持久化只发生于 AOF 重写过程。
-
-使用了混合持久化，重写后的新 AOF 文件前半段是 RDB 格式的全量数据，后半段是 AOF 格式的增量数据。
-
-```bash
-
-开启混合模式后，在bgrewriteaof命令之后会在AOF文件中以RDB格式写入当前最新的数据，之后的写操作继续以AOF的追加形式追加写命令。
-当Redis重启的时候，先加载RDB的部分再加载剩余的AOF部分。
-
-混合持久化本质是通过 AOF 后台重写（bgrewriteaof 命令）完成的，不同的是当开启混合持久化时，fork 出的子进程
-先将当前全量数据以 RDB 方式写入新的 AOF 文件，然后再将 AOF 重写缓冲区（aof_rewrite_buf_blocks）的
-增量命令以 AOF 方式写入到文件，写入完成后通知主进程将新的含有 RDB 格式和 AOF 格式的 AOF 文件替换旧的的 AOF 文件。
-
-```
+- 混合持久化本质是通过 AOF 后台重写（bgrewriteaof 命令）完成的，不同的是当开启混合持久化时，fork 出的子进程先将当前全量数据以 RDB 方式写入新的 AOF 文件，然后再将 AOF 重写缓冲区（aof_rewrite_buf_blocks）的增量命令以 AOF 方式写入到文件，写入完成后通知主进程将新的含有 RDB 格式和 AOF 格式的 AOF 文件替换旧的的 AOF 文件。
 
 优点：结合 RDB 和 AOF 的优点, 更快的重写和恢复。
 
 缺点：AOF 文件里面的 RDB 部分不再是 AOF 格式，可读性差。
-
-
-
-<br/>
-
-
-
-### 4. 持久化选择
+:::
 
 RDB、AOF、混合持久，我应该用哪一个？
 
-```bash
+::: info 持久化策略的选择
 
-一般来说， 如果想尽量保证数据安全性， 你应该同时使用 RDB 和 AOF 持久化功能，同时可以开启混合持久化。
+一般来说， 如果想尽量保证数据安全性， 你应该同时使用 RDB 和 AOF 持久化功能，同时可以开启混合持久化。如果你非常关心你的数据， 但仍然可以承受数分钟以内的数据丢失， 那么你可以只使用 RDB 持久化。如果你的数据是可以丢失的，则可以关闭持久化功能，在这种情况下，Redis 的性能是最高的
 
-如果你非常关心你的数据， 但仍然可以承受数分钟以内的数据丢失， 那么你可以只使用 RDB 持久化。
-
-如果你的数据是可以丢失的，则可以关闭持久化功能，在这种情况下，Redis 的性能是最高的。
-
-
-使用 Redis 通常都是为了提升性能，而如果为了不丢失数据而将 appendfsync  设置为 always 级别时，
-对 Redis 的性能影响是很大的，在这种不能接受数据丢失的场景，其实可以考虑直接选择 MySQL 等类似的数据库。
-
-```
-
-<br/>
+使用 Redis 通常都是为了提升性能，而如果为了不丢失数据而将 appendfsync  设置为 always 级别时，对 Redis 的性能影响是很大的，在这种不能接受数据丢失的场景，其实可以考虑直接选择 MySQL 等类似的数据库。
+:::
 
 
 
@@ -640,32 +521,26 @@ RDB、AOF、混合持久，我应该用哪一个？
 
 
 
-## 三 Redis数据类型
+## Redis的数据类型
 
 Redis⽀持五种数据类型：String（字符串），hash（哈希），list（列表），set（集合）以及 zset（sorted set：有序集合） 等
 
 REDIS data-types-intro：http://redis.cn/topics/data-types-intro.html 
 
-<br/>
-
 Redis数据类型相关的通用命令：
 
 ```bash
-
 # 通常用SET command 和 GET command来设置和获取字符串值
 > set mykey somevalue 
 > get mykey
-
 
 # SET 命令有些有趣的操作，例如，当key存在时SET会失败，或相反的，当key不存在时它只会成功
 > set mykey newval nx    #(nil)
 > set mykey newval xx    # OK
 
-
 # 使用MSET和MGET命令, 一次存储或获取多个key对应的值 (MGET 命令返回由值组成的数组)
 > mset a 10 b 20 c 30
 > mget a b c            
-
 
 # 使用EXISTS命令返回1或0标识给定key的值是否存在，使用DEL命令可以删除key对应的值
 > set mykey hello
@@ -673,13 +548,11 @@ Redis数据类型相关的通用命令：
 > del mykey                    # (integer)1
 > exists mykey                 # (integer)0
 
-
 # TYPE命令可以返回key对应的值的存储类型：
 > set mykey x                  # OK
 > type mykey                   # string
 > del mykey                    # (integer) 1
 > type mykey                   # none
-
 
 # Redis超时:数据在限定时间内存活 （可以对key设置一个超时时间，当这个时间到达后会被删除）
 > set key some-value           # OK
@@ -690,22 +563,15 @@ Redis数据类型相关的通用命令：
 # 也可以再次调用这个命令来改变超时时间，使用PERSIST命令去除超时时间 （TTL命令用来查看key对应的值剩余存活时间）
 > set key 100 ex 10            # OK  设置带过期时间的数据 或 改变超时时间 （默认单位为seconds）
 > ttl key                      # (integer) 9  查看剩余时间, -1永不过期, -2过期
-
-
 ```
 
 
 
-<br/>
-
-
-
-### 1. Redis Strings
+### Redis Strings
 
 二进制安全的字符串、Commands：https://redis.io/commands/?group=string 
 
 ```bash
-
 > set rekey data              # 设置已经存在的key ,会覆盖
 > setnx rekey data            # 设置已经存在的key ,不会覆盖
 
@@ -719,7 +585,6 @@ Redis数据类型相关的通用命令：
 
 > getrange key start end      # 截取数据, end=-1代表到最后
 > setrange key start newdata  # 从start位置开始替换数据
-
 ```
 
 应用场景：
@@ -738,7 +603,7 @@ Redis数据类型相关的通用命令：
 
 
 
-### 2. Redis Hashes
+### Redis Hashes
 
 REDIS data-types-intro：http://redis.cn/topics/data-types-intro.html#hashes 
 
@@ -763,7 +628,6 @@ OK
 1) "zhangsan"
 2) (nil)
 
-
 > hgetall user:1001
 1) "username"
 2) "zhangsan"
@@ -771,7 +635,6 @@ OK
 4) "1999"
 5) "verified"
 6) "1"
-
 
 > hincrby user age 2             #累加属性
 > hincrbyfloat user age2.2       #累加属性
@@ -781,8 +644,6 @@ OK
 > hkeys user                     #获得所有属性
 > hvals user                     #获得所有值
 > hdel user field1 field2        #删除指定的对象属性
-
-
 ```
 
 应用场景：  
@@ -793,18 +654,13 @@ OK
 
 
 
-<br/>
-
-
-
-### 3. Redis lists
+### Redis lists
 
 REDIS data-types-intro：http://redis.cn/topics/data-types-intro.html#lists 
 
 list 按插入顺序排序的字符串元素的集合。 Redis lists基于Linked Lists实现。
 
 ```
-
 这意味着即使在一个list中有数百万个元素，在头部或尾部添加一个元素的操作，其时间复杂度也是常数级别的。
 用LPUSH 命令在十个元素的list头部添加新元素，和在千万元素list头部添加新元素的速度相同。
 
@@ -814,24 +670,20 @@ Redis Lists用linked list实现的原因是：对于数据库系统来说，至�
 另一个重要因素是，正如你将要看到的：Redis lists能在常数时间取得常数长度。
 
 如果快速访问集合元素很重要，建议使用可排序集合(sorted sets)。可排序集合我们会随后介绍。
-
 ```
 
 <br/>
 
 ```bash
-
 lpush list1 pig cow sheep chicken duck
 lpush userList 1 2 3 4 5         #构建一个list ,从左边开始存入数据(最后存入的数据在最左面)
 rpush userList 1 2 3 4 5         #构建一个list ,从右边开始存入数据(最后存入的数据在最右面)
-
 
 llen list                        #list长度
 lindex list index                #获取list指定下标的值
 lset list index value            #把某个下标的值替换
 
 lrange list start end            #获得数据 (-1表示最后一个元素，-2表示list中的倒数第二个元素，以此类推)
-
 
 lpop                             #从左侧开始拿出(并删除)一个数据
 rpop                             #从右侧开始拿出(并删除)一个数据 
@@ -840,19 +692,12 @@ lrem list num value              #删除num个相同的value
 
 ltrim list start end             #把list从左边截取指定长度,并赋值给原来的list
 
-
 linsert list before/after value newValue  #在value的前/后插入一个新的值
-
 ```
 应用场景：
 
 - 可以用作消息队列
 - 可以用作消息未读清单（例如：bilibili）
-
-
-
-<br>
-
 
 
 **key 的自动创建和删除** : 
@@ -917,29 +762,21 @@ string
 规则 3 示例:
 
 ```bash
-
 > del mylist            # (integer) 0
 
 > llen mylist           # (integer) 0
 
 > lpop mylist           # (nil)
-
 ```
 
 
-
-<br/>
-
-
-
-### 4. Redis Sets 
+### Redis Sets 
 
 REDIS data-types-intro：http://redis.cn/topics/data-types-intro.html#sets 
 
 set 集合,  Redis Set 是 String 的无序排列 (不重复且无序的字符串元素的集合)
 
 ```bash
-
 # SADD 指令把新的元素添加到 set 中
 sadd set1 cow sheep pig duck sheep     #新建集合并向其中添加不重复的元素
 
@@ -971,11 +808,7 @@ sunion set1 set2                       #求并集
 
 
 
-<br/>
-
-
-
-### 5. Redis Sorted sets 
+### Redis Sorted sets 
 
 REDIS data-types-intro：http://redis.cn/topics/data-types-intro.html#sorted-sets 
 
@@ -988,7 +821,6 @@ every element in a sorted set is associated with a floating point value, called 
 <br>
 
 ```bash
-
 zadd zset 10 value1 20 value2 30 value3            #设置member和对应的分数
 
 zrange zset 0 -1                                   #查看所有zset中的内容
@@ -999,7 +831,6 @@ zscore zset value                                  #获得对应的分数
 
 zcard zset                                         #统计个数
 zcount zset 分数1 分数2                             #统计个数[包含边界]
-
 
 zrangebyscore zset分数1 分数2                       #查询分数之间的member(包含分数1 分数2)
 zrangebyscore zset (分数1 (分数2                    #查询分数之间的member (不包含分数1和分数2 )
@@ -1017,7 +848,6 @@ zrem zset value                                    #删除member
 
 
 
-<br/>
 
 
 
