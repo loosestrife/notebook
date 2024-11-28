@@ -1,31 +1,24 @@
 ---
 
 order: 1
-title:  Java基础面试题
+title:  Java基础
 
 ---
 
 
 ## Java基础知识
 
-### Java的优势
 
-你认为 Java 的优势是什么？
+1. 你认为 Java 的优势是什么？
 
-::: info Java的优势
 在过去Java因其 **跨平台，垃圾回收，面向对象** 等特点而流行起来，到现在形成了 ==成熟的生态== ，拥有完善的工具，框架和中间件，以及大量的专业人才，我觉得这才是Java现如今最大的优势和竞争力。
-:::
 
 
-### JDK与JRE
+2. JDK 和 JRE 有什么区别？你使用过哪些 JDK 提供的工具？
 
-JDK 和 JRE 有什么区别？你使用过哪些 JDK 提供的工具？
-
-::: tip
-#### JDK与JRE的区别
 JRE指的是Java运行环境，包含了 **JVM** 及 **核心类库** ，JDK可视为JRE的超集，它包含了JRE 以及其他用于开发和调试的工具
 
-#### JDK提供的主要工具
+::: details JDK提供的主要工具
 - JDK 常见工具
     - javac:Java 编译器，负责将 Java 源代码编译成字节码(.class 文件)。
     - java:运行 Java 应用程序的命令，使用 JM 来解释并执行编译后的字节码文件。
@@ -46,163 +39,41 @@ JRE指的是Java运行环境，包含了 **JVM** 及 **核心类库** ，JDK可�
 :::
 
 
-### for/foreach
-
-Java 中 for 循环与 foreach 循环的区别是什么？
-
-::: info for循环和foreach的区别
-#### foreach
-foreach是 java5 引入的一种简化的循环结构，常用于遍历 **数组** 或 **实现了Iterable接口的集合**
-```java
- for (String fruit : fruits) {
-    System.out.println(fruit);
-}
-```
-- foreach虽然简洁易用，但不提供对当前索引的访问
-- 遍历过程中不能修改集合的结构（添加或删除集合元素），否则会抛出并发修改异常`ConcurrentModificationException`
-
-#### for循环
-for循环则更加灵活，可以控制循环的初始值，终止条件和步进方式。适用于需要通过索引访问元素，或在循环中添加/删除集合中的元素
-```java
-int[] numbers = {1, 2, 3, 4, 5};
-for (int i = 0; i < numbers.length; i++) {
-    System.out.println(numbers[i]);
-}
-```
-:::
 
 
-### Iterator
+### Java数据类型
 
-什么是 Java 中的迭代器（Iterator）？
+1. Java 中的基本数据类型有哪些？
 
-::: warning Iterator迭代器
-Iterator是Java集合框架中用于遍历集合元素的接口，迭代器是的遍历不同类型的集合更加简洁，统一，提升了代码的可读性。在遍历过程中还可以添加或删除元素。比如：`iterator.remove()`
-
-- Iterator 迭代器采用的是 快速失败（fail-fast）机制，一旦使用非Iterator的方法或其他线程修改了集合，就会导致集合的`modCount`和 Iterator的`expectedModCount`不相等，将引发`ConcurrentModificationException`异常
-
-- 对集合使用foreach循环，本质上也是Iterator，同样不能随意修改。对数组使用foreach则会被编译成为传统的for循环
-
-List专门提供了ListIterator方法，其返回值是一个Iterator的子接口，最明显的特点就是支持双向遍历(`hasPrevious`和`previous`)
-:::
-
-关于集合 迭代器，及其与Foreach的关系参照：[Iterator](/java/syntax/base/collection.md#_1-iterator)
-
-
-### 参数传递
-
-Java 中的参数传递是按值还是按引用？
-
-::: tip 值传递（pass by value）和引用传递（pass by reference）
-在Java中，无论是基本类型还是引用类型的数据，参数传递都只有 **值传递（pass by value）**
-
-  - 传递基本类型的参数时，传递的是值的副本。不会影响到原本的值。
-  - 传递引用数据类型时，传递的是引用的副本，使得方法参数和原本的变量均指向同一对象，因此可以修改对象的属性，但是无法让原本的变量指向其他对象。
-:::
-
-更详细的内容参照：[Java参数传递](/java/syntax/base/Java基础.md#参数传递)
-
-
-
-
-## Java数据类型
-
-
-### 基本数据类型
-
-Java 中的基本数据类型有哪些？
-
-::: info 基本数据类型(Primitive Types)
-Java中有8中基本数据类型: 
-
-整型（byte,short,int,long）, 浮点型(float,double), 字符型(char), 布尔型(boolean)
-:::
+8种基本数据类型: 整型（byte,short,int,long）, 浮点型(float,double), 字符型(char), 布尔型(boolean)
 
 更多更详细的内容参照：[Java基本数据类型](/java/syntax/base/Java基础.md#基本数据类型)
 
 
-### 包装类型
+2. Java 中包装类型和基本类型的区别是什么？
 
-Java 中包装类型和基本类型的区别是什么？
+`Byte`, `Short`, `Integer`, `Long`, `Float`, `Double`, `Character`, `Boolean`
 
-| 特征             | 基本类型变量（Primitive Types）                      | 包装类型变量（Wrapper Types）                          |
-|------------------|----------------------------------------------------|------------------------------------------------------|
-| **数据类型**     | `byte`, `short`, `int`, `long`, `float`, `double`, `char`, `boolean` | `Byte`, `Short`, `Integer`, `Long`, `Float`, `Double`, `Character`, `Boolean` |
-| **存储方式**     | 直接存储值                                         | 存储对象的引用                                       |
-| **内存位置**     | 局部变量：栈内存；成员变量：堆内存                  | 局部变量：栈内存（引用），对象：堆内存                |
-| **默认值**       | 局部变量必须初始化；成员变量有默认值（如 `int` 默认值为 0） | 局部变量和成员变量的默认值都是 `null`                 |
-| **空值支持**     | 不能为 `null`                                      | 可以为 `null`                                        |
-| **性能**         | 无对象开销，性能更高                                | 存在对象开销，性能略低                                |
-| **方法和属性**   | 没有方法和属性                                      | 可以调用方法和属性，如 `Integer.toString()`           |
-| **自动装箱和拆箱** | 不支持                                              | 支持自动装箱和拆箱                                    |
-| **内存占用**     | 固定内存大小，如 `int` 占用 4 个字节                | 包括对象头和引用，内存占用更大                        |
-| **适用场景**     | 性能要求高、不需要对象特性的场景                    | 需要对象特性、支持 `null` 值、需要调用方法的场景      |
+包装类型的本质是对象，适用于需要对象特性、支持 `null` 值、需要调用方法的场景 
 
 
-### 装箱和拆箱
+3. 什么是 Java 中的自动装箱和拆箱？
 
-什么是 Java 中的自动装箱和拆箱？
+- 自动装箱（Autoboxing）: 将基本类型自动转换为其对应的包装类型的过程。
+    当遇到将基本类型赋值给包装类型的情况时，编译器会自动调用 `Integer.valueOf(int)`
 
-::: tip 自动装箱（Autoboxing）和拆箱（Unboxing）
-#### 自动装箱（Autoboxing）
-
-**定义**：将基本类型自动转换为其对应的包装类型的过程。
-
-```java
-int primitiveInt = 10;
-Integer wrapperInt = primitiveInt; // 自动装箱
-```
-当遇到将基本类型赋值给包装类型的情况时，编译器会自动调用 `Integer.valueOf(int)`
-
-#### 拆箱（Unboxing）
-
-**定义**：将包装类型自动转换为其对应的基本类型的过程。
-
-```java
-Integer wrapperInt = 10;
-int primitiveInt = wrapperInt; // 拆箱
-```
-当编译器遇到将包装类型赋值给基本类型的情况时，会自动插入相应的解包方法调用。如：`Integer.intValue()`
-
-#### 注意事项
-
-1. **性能问题**： 自动装箱和拆箱涉及对象的创建和方法调用，可能会带来性能开销。在性能敏感的应用中，应尽量避免频繁的自动装箱和拆箱操作。
-
-2. **空指针异常**： 拆箱时，如果包装类型变量为 `null`，会抛出 `NullPointerException`。因此，在拆箱之前应确保包装类型变量不为 `null`。
-
-3. **缓存机制**：`Integer` 类在 `-128` 到 `127` 范围内的值会进行缓存，多次创建相同值的 `Integer` 对象会返回同一个对象。
-:::
+- 拆箱（Unboxing）: 将包装类型自动转换为其对应的基本类型的过程。
+    当编译器遇到将包装类型赋值给基本类型的情况时，会自动插入相应的解包方法调用。如：`Integer.intValue()`
 
 
-### Integer缓存池
-
-什么是 Java 的 Integer 缓存池？
+4. 什么是 Java 的 Integer 缓存池？
 
 `Integer` 类的内部实现中使用了一个静态数组来存储这些常用的小整数值(-128 到 127)，以减少对象的创建和垃圾回收的开销。
 
-::: info 缓存池的工作原理
-
-`Integer` 缓存池的具体实现位于 `Integer` 类的 `IntegerCache` 内部类中。
-
-1. **缓存范围**：默认情况下，`Integer` 缓存池的范围是从 `-128` 到 `127`。
-这个范围可以通过 JVM 参数 `-Djava.lang.Integer.IntegerCache.high=<N>` 进行调整，但最低值仍然是 `-128`。Java 9 及以后的版本中引入了：`-XX:AutoBoxCacheMax`, 更加直观易用
-
-2. **缓存数组及其初始化**：`IntegerCache` 类中有一个静态数组 `cache`，用于存储这个范围内的 `Integer` 对象。在 `IntegerCache` 类的静态初始化块中，会根据配置的范围创建并初始化这个缓存数组。每个数组元素都存储了一个 `Integer` 对象。
-
-3. **自动装箱**：当使用 `Integer.valueOf(int)` 方法进行自动装箱时，如果传入的值在缓存范围内，会直接返回缓存数组中对应的 `Integer` 对象，而不是创建新的 `Integer` 对象。
-
-Byte,Short,Long的缓存范围与Integer一样，但不能通过JVM参数进行调整。Character的范围是0-127(代表ASCII字符集)，Boolean只有true和false
-:::
-
-总结：
-- **`Integer` 缓存池**：缓存了从 `-128` 到 `127` 范围内的 `Integer` 对象。在缓存范围内，`Integer.valueOf(int)` 会返回缓存中的对象。减少了对象的创建次数，提高了性能。
-- **注意事项**：使用 `==` 比较 `Integer` 对象时需要注意缓存范围的影响，推荐使用 `equals` 方法进行值比较。
+**注意事项**：使用 `==` 比较 `Integer` 对象时需要注意缓存范围的影响，推荐使用 `equals` 方法进行值比较。
 
 
-
-### BigDecimal
-
-什么是 Java 的 BigDecimal？  参照：[BigDecimal](/java/syntax/base/Java常用类库.md#_2-bigdecimal)
+5. 什么是 Java 的 BigDecimal？  参照：[BigDecimal](/java/syntax/base/Java常用类库.md#_2-bigdecimal)
 
 `BigDecimal`是Java中用于进行高精度浮点数运算的工具类，适用于金融和科学计算等需要高精度的场景。
 
@@ -222,9 +93,7 @@ BigDecimal bd3 = new BigDecimal(123.456);    // 使用double初始化，可能�
 
 
 
-## Java字符串对象
-
-### String
+### Java字符串对象
 
 Java中处理字符串的主要类是String、StringBuilder和StringBuffer。 参考：[Java字符串](/java/syntax/base/数组和字符串.md#三-字符串-string)
 
@@ -244,24 +113,6 @@ Java中处理字符串的主要类是String、StringBuilder和StringBuffer。 �
 - JDK9中String采用byte[]数组来实现，并使用coder变量标识编码方式(UTF-16/Latin-1)， 当字符仅需一个字符的空间时，就可以减少内存占用
 :::
 
-
-### StringBuilder
-
-Java 的 StringBuilder 是怎么实现的？
-
-`StringBuilder` 是 Java 中用于高效构建字符串的类，主要用于单线程环境。
-
-::: tip StringBuilder的实现原理
-1. **内部数据结构**：`StringBuilder` 内部使用一个字符数组 `char[]` 来存储字符串数据。
-2. **构造函数**：提供了多种构造函数，包括无参构造函数（默认初始容量为 16）、带初始容量的构造函数、带字符串的构造函数和带 `CharSequence` 的构造函数。
-3. **动态扩容**：当内部字符数组空间不足时，会自动进行扩容。扩容策略是将当前容量翻倍再加 2，以确保有足够的空间存储新的数据。
-4. **常见方法**：`StringBuilder` 提供了丰富的字符串操作方法，如 `append`（追加数据）、`insert`（插入数据）、`delete`（删除数据）、`reverse`（反转字符串）和 `toString`（将 `StringBuilder` 转换为 `String` 对象）。
-:::
-通过这些设计，`StringBuilder` 在单线程环境中能够高效地构建和操作字符串，避免了频繁创建新的 `String` 对象带来的性能开销。
-
-
-### StringBuffer
-
 Java 中 String、StringBuffer 和 StringBuilder 的区别是什么？
 
 - String: 不可变，适合少量字符串操作。  
@@ -270,33 +121,14 @@ Java 中 String、StringBuffer 和 StringBuilder 的区别是什么？
 - StringBuffer：可变，且线程安全，适合多线程环境中频繁修改字符串的场景
 
 
-### 序列化
-
-Java 中的序列化和反序列化是什么？
-
 ::: info Java 中的序列化和反序列化
 
-Java 中的序列化和反序列化是将对象的状态信息转换为可以存储或传输的形式，以及将字节流恢复为对象的过程。具体实现原理如下：
+- 序列化: 将对象的状态信息转换为可以存储或传输的形式，要使一个对象可以被序列化，该对象的类必须实现 `Serializable` 接口。
+- 反序列化: 将字节流恢复为对象的过程
 
-1. **序列化**：
-   - **标记接口**：要使一个对象可以被序列化，该对象的类必须实现 `Serializable` 接口。`Serializable` 是一个标记接口，没有定义任何方法。
-   - **默认序列化机制**：Java 提供了默认的序列化机制，通过 `ObjectOutputStream` 类将对象写入输出流。
-   - **自定义序列化**：可以通过实现 `writeObject` 和 `readObject` 方法来自定义序列化和反序列化过程。
-
-2. **反序列化**：
-   - **读取字节流**：通过 `ObjectInputStream` 类从输入流中读取字节流并恢复对象。
-   - **对象重建**：反序列化过程中，Java 会重建对象的实例，并恢复其状态。
-
-3. **注意事项**：
-   - **`serialVersionUID`**：建议显式定义 `serialVersionUID`，以避免因类结构变化而导致的序列化失败。
-   - **非序列化字段**：使用 `transient` 关键字标记不想被序列化的字段。
-   - **安全性**：注意序列化和反序列化过程中可能存在安全风险，特别是当对象来自不可信来源时。可以通过使用 `ObjectInputFilter` 进行过滤来提高安全性。
-   - **性能**：序列化和反序列化过程可能会消耗较多资源，可以通过优化数据结构和使用更高效的序列化库来提高性能。
-   - **继承**：如果一个类实现了 `Serializable` 接口，其子类也会自动实现 `Serializable` 接口。如果父类没有实现 `Serializable` 接口，但子类实现了 `Serializable` 接口，那么父类的状态信息不会被序列化。
+建议显式定义 `serialVersionUID`，以避免因类结构变化而导致的序列化失败。
 :::
 
-
-### 乱码问题
 
 为什么在 Java 中编写代码时会遇到乱码问题？
 
@@ -306,100 +138,251 @@ Java 中的序列化和反序列化是将对象的状态信息转换为可以存
 
 
 
-## Java面向对象
+### Java面向对象
 
 Java 面向对象编程与面向过程编程的区别是什么？
 
-::: tip 面向对象编程（OOP）和面向过程编程（Procedural Programming）
 - **面向对象编程**：关注数据（对象）及其行为（方法），通过类和对象来组织代码。数据和操作数据的方法封装在一起，外部访问受限，增强数据安全性。支持继承和多态，可以通过继承扩展类的功能，多态允许子类方法覆盖父类方法。**面向对象更符合人类的思维方式**。
 
 - **面向过程编程**：关注过程（函数）和数据，通过函数和数据结构来组织代码。数据和函数分离，数据暴露在外，容易被随意修改。
-:::
 
-### 封装继承多态
+::: info 封装继承多态
 
-什么是 Java 的封装特性？
+#### 什么是 Java 的封装特性？
 
-为什么 Java 不支持多重继承？
+指将对象的 状态和行为（数据和方法）封装在内部，通过公开的接口与外部进行交互。封装的主要目的是隐藏内部的实现细节，只暴露必要的功能。且修改内部的具体实现外部也无法感知到 （数据保护，代码复用）
 
-什么是 Java 中的继承机制？
+#### 什么是 Java 中的继承机制？为什么 Java 不支持多重继承？
 
-什么是 Java 的多态特性？
+- 子类继承父类的属性和方法，使得类之间形成层次结构，不仅代码得到重用，还可以进行扩展。继承是实现 多态，抽象和代码复用的关键。
+
+- 多继承会产生菱形继承问题，例如：BC继承了A，D又继承了BC，假设D现在要调用A中的方法，但是B C都有不同的实现，此时就会出现歧义。
+
+既然多继承不行，为什么接口多实现可以？
+
+Java8之前，接口是无法定义具体的方法实现的，必须由子类自己实现，并不会产生歧义。
+
+Java8有了默认方法，但是强制规定如果多个接口内有相同的默认方法，子类必须重写该方法。
 
 
-### 访问修饰符
+#### 什么是 Java 的多态特性？
+
+指同一个接口或者父类引用变量可以指向不同的对象实例，并根据实际指向的对象类型执行相应的方法。
+
+它允许同一方法在不同的对象上表现出不同的行为。通过多态，程序可以灵活的处理不同类型的对象，降低代码耦合度。
+::: 
+
+
 Java 中的访问修饰符有哪些？
 
+| 访问修饰符 | 访问范围                             | 示例                           |
+|------------|--------------------------------------|-------------------------------|
+| **private** | 仅限于同一个类内部                   | `private int privateVar;`     |
+| **default** | 同一个包内的类                       | `int defaultVar;`             |
+| **protected** | 同一个包内的类以及不同包中的子类     | `protected int protectedVar;` |
+| **public**  | 所有类，不受包的限制                 | `public int publicVar;`       |
 
-### 方法
-Java 中静态方法和实例方法的区别是什么？
 
 
-Java 方法重载和方法重写之间的区别是什么？
+### 方法和参数传递
+
+1. Java 中静态方法和实例方法的区别是什么？
+
+- **静态方法**：属于类，通过类名调用，只能访问静态成员，不能被重写。
+- **实例方法**：属于对象，通过对象调用，可以访问所有成员，可以被重写。
+
+2. Java 方法重载和方法重写之间的区别是什么？
+
+- **方法重载**：在同一类中，方法名相同但参数列表不同，可以在编译时根据参数类型和数量区分方法
+- **方法重写**：在子类中，方法名、返回类型和参数列表都相同，用于实现多态，改变父类方法的行为
+
+3. Java 中的参数传递是按值还是按引用？
+
+::: tip 值传递（pass by value）和引用传递（pass by reference）
+在Java中，无论是基本类型还是引用类型的数据，参数传递都只有 **值传递（pass by value）**
+
+  - 传递基本类型的参数时，传递的是值的副本。不会影响到原本的值。
+  - 传递引用数据类型时，传递的是引用的副本，使得方法参数和原本的变量均指向同一对象，因此可以修改对象的属性，但是无法让原本的变量指向其他对象。
+:::
+
+更详细的内容参照：[Java参数传递](/java/syntax/base/Java基础.md#参数传递)
+
+
+
+
+
+
 
 
 ### 接口和抽象类
+
 接口和抽象类有什么区别？
 
+::: info 抽象类和接口
+#### 普通类和抽象类有什么区别？
+
+- **普通类**：可以直接实例化，提供具体的方法实现。
+- **抽象类**：不能直接实例化，可以包含抽象方法（没有具体实现的方法），子类必须实现这些抽象方法。
+
+#### 抽象类和接口有什么区别？
+
+- **抽象类**： 可以包含抽象方法和具体方法。 只能单继承。可以包含成员变量。
+- **接口**： 只能包含抽象方法（Java 8 以后可以包含默认方法和静态方法）。 可以多实现。 成员变量默认是 `public static final`。
+:::
+
+
+
+
 ### 深浅拷贝
+
 Java 中的深拷贝和浅拷贝有什么区别？
+- **浅拷贝**：创建一个新对象，但只复制基本数据类型和引用类型的数据地址，原始对象和拷贝对象共享引用类型的内存地址。
+- **深拷贝**：创建一个完全独立的新对象，复制所有数据，包括引用类型的数据，使得原始对象和拷贝对象互不影响。
 
 
 ### 内部类
+
 什么是 Java 内部类？它有什么作用？
 
+**定义**：内部类是指在一个类的内部定义的类。
 
-### Object类
+1. **成员内部类（Member Inner Class）**：定义在类的内部，但不在方法或代码块中。可以访问外部类的所有成员（包括私有成员）。
+2. **局部内部类（Local Inner Class）**： 定义在方法或代码块中。 只能在定义它的方法或代码块中使用。
+3. **匿名内部类（Anonymous Inner Class）**： 没有名字，通常用于创建单个对象。 经常用于事件监听器等场景。
+4. **静态内部类（Static Nested Class）**： 使用 `static` 关键字修饰。 不依赖于外部类的实例，可以直接通过外部类名访问。
+
+作用
+1. **逻辑封装**：内部类可以访问外部类的私有成员，实现更紧密的封装。
+2. **代码组织**： 内部类可以将相关的类组织在一起，提高代码的可读性和可维护性。
+3. **事件处理**： 匿名内部类常用于事件监听器，简化事件处理代码。
+
+
+
+### Object类中的方法
+
 Java Object 类中有什么方法，有什么作用？
 
+1. **`toString()`**：返回对象的字符串表示形式。默认返回对象的类名和哈希码
 
-### hashCode/equals
+2. **`hashCode()`**：基于对象的内存地址生成哈希码。
+
+3. **`equals(Object obj)`**：检查两个对象是否是同一个对象（即引用是否相同）。
+
+4. **`clone()`**：创建并返回对象的一个副本。默认是浅拷贝，需要实现 `Cloneable` 接口。通常会重写实现深拷贝
+
+5. **`finalize()`**：对象被垃圾回收前调用的方法。用于释放资源，但不建议依赖此方法进行资源管理，应使用 `try-with-resources` 等更可靠的机制。
+
+6. **`getClass()`**：返回对象的 `Class` 对象。
+
+7. **`wait()`**、**`notify()`**、**`notifyAll()`**：用于多线程编程中的同步控制。
+   - **`wait()`**：使当前线程等待，释放对象锁。
+   - **`notify()`**：唤醒一个等待该对象锁的线程。
+   - **`notifyAll()`**：唤醒所有等待该对象锁的线程。
+
+
+
+### equals/hashCode
+
 Java 中 hashCode 和 equals 方法是什么？它们与 == 操作符有什么区别？
+
+- **`hashCode` 方法**：返回对象的哈希码，用于哈希表中的快速查找。
+- **`equals` 方法**：判断两个对象是否相等，通常需要重写以实现自定义的相等逻辑。
+- **`==` 操作符**：比较两个对象的引用是否相同，即是否指向同一个对象。
+
 
 Java 中的 hashCode 和 equals 方法之间有什么关系？
 
+  - **一致性**：如果两个对象通过 `equals` 方法判断为相等，那么它们的 `hashCode` 方法返回的值必须相同。(这样可以确保在哈希表中，相等的对象会被放在同一个桶中)
+  - **反向关系**：如果两个对象的 `hashCode` 值不同，那么它们一定不相等。
 
-### 不可变类
-什么是 Java 中的不可变类？
-
-
-
+在哈希表（如 `HashMap`、`HashSet`）中，`hashCode` 用于快速定位桶的位置
 
 
 
 
 
-## IO和网络编程
+### IO和网络编程
 
-### IO流
 Java 的 I/O 流是什么？
 
-### NIO和AIO
 什么是 BIO、NIO、AIO？
 
-### Channel
 什么是 Channel？
 
 
-### Selector
 什么是 Selector？
 
-### 网络编程
 什么是 Java 的网络编程？
 
 
 
 ## Java高级特性
 
-### 注解原理
-Java 中的注解原理是什么？
+### 注解和反射
 
-### 反射及其应用
+Java 中的注解原理是什么？
+**注解** 是一种元数据，用于提供程序元素（如类、方法、变量）的附加信息。注解本身不会直接影响程序的运行，但可以通过注解处理器在编译时或运行时读取这些注解并执行相应的操作。
+
+主要组成部分
+
+1. **元注解**：
+   - **`@Retention`**：指定注解的保留策略（`SOURCE`、`CLASS`、`RUNTIME`）。
+   - **`@Target`**：指定注解可以应用的目标（如 `TYPE`、`METHOD`、`FIELD`）。
+   - **`@Documented`**：指定注解是否包含在 Javadoc 文档中。
+   - **`@Inherited`**：指定注解是否可以被子类继承。
+
+2. **自定义注解**：
+   - 使用 `@interface` 关键字定义。
+   - 可以包含属性（方法），属性可以有默认值。
+
+注解处理器
+
+- **编译时处理**：使用注解处理器在编译时读取注解并生成代码或执行其他操作。
+- **运行时处理**：使用反射机制在运行时读取注解并执行相应的操作。
+
+ 应用场景
+
+- **编译时检查**：如 `@Override`、`@Deprecated`。
+- **代码生成**：如 Lombok 注解生成 getter 和 setter 方法。
+- **配置元数据**：如 Spring 的 `@Autowired`、`@Component`。
+- **运行时行为**：如 JUnit 的 `@Test`、`@Before`。
+
+
+
 你使用过 Java 的反射机制吗？如何应用反射？
 
+::: info Java反射
+Java反射机制是Java语言提供的一种能够在运行时分析类和对象的能力。它允许程序在运行时动态地获取类的信息（如类名、属性、方法等），创建对象，调用方法，改变属性值等。 这对于开发一些需要高度灵活性和元编程功能的应用非常有用，比如开发框架、ORM工具、AOP（面向切面编程）等
 
-### SPI机制
-什么是 Java 的 SPI（Service Provider Interface）机制？
+1. **获取 `Class` 对象**：
+   - **`Class.forName(String className)`**：通过类名获取 `Class` 对象。
+   - **`Object.getClass()`**：通过对象获取 `Class` 对象。
+   - **`Class<T> c = T.class`**：通过类字面量获取 `Class` 对象。
+
+2. **创建对象**：
+   - **`Class.newInstance()`**：创建类的实例（Java 9 以后不推荐使用）。
+   - **`Constructor.newInstance(Object... initargs)`**：通过构造器创建类的实例。
+
+3. **获取和调用方法**：
+   - **`Class.getMethod(String name, Class... parameterTypes)`**：获取公共方法。
+   - **`Class.getDeclaredMethod(String name, Class... parameterTypes)`**：获取所有方法（包括私有方法）。
+   - **`Method.invoke(Object obj, Object... args)`**：调用方法。
+
+4. **获取和访问字段**：
+   - **`Class.getField(String name)`**：获取公共字段。
+   - **`Class.getDeclaredField(String name)`**：获取所有字段（包括私有字段）。
+   - **`Field.set(Object obj, Object value)`**：设置字段值。
+   - **`Field.get(Object obj)`**：获取字段值。
+
+5. **获取和访问构造器**：
+   - **`Class.getConstructor(Class... parameterTypes)`**：获取公共构造器。
+   - **`Class.getDeclaredConstructor(Class... parameterTypes)`**：获取所有构造器（包括私有构造器）。
+
+6. **设置访问权限**：
+   - **`AccessibleObject.setAccessible(boolean flag)`**：设置是否允许访问私有成员。
+:::
+
+
 
 
 ### 泛型
@@ -434,7 +417,14 @@ JDK8 有哪些新特性？
 Java 的 Optional 类是什么？它有什么用？
 
 
+### Lambda&Stream
 
+
+
+
+
+### SPI机制
+什么是 Java 的 SPI（Service Provider Interface）机制？
 
 
 

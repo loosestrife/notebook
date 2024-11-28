@@ -8,7 +8,7 @@ export const enSidebar = sidebar({
     {
       text: "Java Programming",
       icon: "code",
-      link: "syntax/",
+      link: "/java/",
       children: "structure",
     },
   ],
@@ -16,7 +16,7 @@ export const enSidebar = sidebar({
     {
       text: "Python And AI",
       icon: "python",
-      link: "syntax/",
+      link: "/python/",
       children: "structure",
     },
   ],
@@ -24,7 +24,7 @@ export const enSidebar = sidebar({
     {
       text: "常用软件和开发工具",
       icon: "application",
-      link: "tool/",
+      link: "/tool/",
       children: "structure",
     },
   ],
@@ -32,7 +32,7 @@ export const enSidebar = sidebar({
     {
       text: "前端开发知识体系",
       icon: "application",
-      link: "web/",
+      link: "/web/",
       children: "structure",
     },
   ],
@@ -40,7 +40,7 @@ export const enSidebar = sidebar({
     {
       text: "Java开发面试题库",
       icon: "java",
-      link: "interview/",
+      link: "/interview/",
       children: "structure",
     },
   ]
