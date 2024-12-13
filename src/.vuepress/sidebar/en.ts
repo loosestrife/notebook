@@ -4,6 +4,14 @@ export const enSidebar = sidebar({
   "/": [
     "",
   ],
+  "/cpp/": [
+    {
+      text: "C++",
+      icon: "code",
+      link: "/cpp/",
+      children: "structure",
+    },
+  ],
   "/java/": [
     {
       text: "Java Programming",
@@ -38,7 +46,7 @@ export const enSidebar = sidebar({
   ],
   "/interview/": [
     {
-      text: "Java开发面试题库",
+      text: "Java开发面试内容",
       icon: "java",
       link: "/interview/",
       children: "structure",

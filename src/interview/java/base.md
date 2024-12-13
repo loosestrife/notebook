@@ -303,16 +303,25 @@ Java 中的 hashCode 和 equals 方法之间有什么关系？
 
 ### IO和网络编程
 
-Java 的 I/O 流是什么？
+1. **Java 的 I/O 流是什么？**
+   Java 的 I/O 流是一组用于处理输入和输出操作的类和接口，提供了读取和写入数据到不同源或目的地的功能。
 
-什么是 BIO、NIO、AIO？
+2. **什么是 BIO、NIO、AIO？**
+   BIO（阻塞I/O）、NIO（非阻塞I/O）和 AIO（异步I/O）是 Java 中三种不同的 I/O 模型，分别代表了同步阻塞、同步非阻塞和异步非阻塞的 I/O 处理方式。
+   - BIO：线程在I/O操作期间被阻塞。
+   - NIO：线程在发起 I/O 操作后不会被阻塞，但它需要轮询 Selector 来检查是否有 I/O 事件发生。
+   - AIO：线程在发起 I/O 操作后不会被阻塞，并且操作系统会在操作完成时通知 Java 应用。通过 CompletionHandler 或 Future 来处理操作完成的通知。
 
-什么是 Channel？
+   更多关于NIO的内容参考：[Java NIO](/java/syntax/io/nio.html#nio核心概念)
 
+3. **什么是 Channel？**
+   Channel 是 NIO 中的一个核心概念，表示一个能够执行 I/O 操作的对象，如读取、写入、映射文件等，并且可以与 Buffer 交互以传输数据。
 
-什么是 Selector？
+4. **什么是 Selector？**
+   Selector 是 NIO 中用于多路复用 I/O 操作的组件，允许单个线程管理多个 Channel，从而提高并发处理能力。
 
-什么是 Java 的网络编程？
+5. **什么是 Java 的网络编程？**
+   Java 的网络编程是指利用 Java 提供的 API 来开发能够在网络上进行通信的应用程序，包括创建客户端和服务器端程序，处理 TCP/UDP 协议等。
 
 
 
@@ -320,25 +329,22 @@ Java 的 I/O 流是什么？
 
 ### 注解和反射
 
-Java 中的注解原理是什么？
 **注解** 是一种元数据，用于提供程序元素（如类、方法、变量）的附加信息。注解本身不会直接影响程序的运行，但可以通过注解处理器在编译时或运行时读取这些注解并执行相应的操作。
 
-主要组成部分
+- **编译时处理**：使用注解处理器在编译时读取注解并生成代码或执行其他操作。
+- **运行时处理**：使用反射机制在运行时读取注解并执行相应的操作。
 
-1. **元注解**：
+::: info 元注解和自定义注解
+#### 元注解
    - **`@Retention`**：指定注解的保留策略（`SOURCE`、`CLASS`、`RUNTIME`）。
    - **`@Target`**：指定注解可以应用的目标（如 `TYPE`、`METHOD`、`FIELD`）。
    - **`@Documented`**：指定注解是否包含在 Javadoc 文档中。
    - **`@Inherited`**：指定注解是否可以被子类继承。
 
-2. **自定义注解**：
+#### 自定义注解
    - 使用 `@interface` 关键字定义。
    - 可以包含属性（方法），属性可以有默认值。
-
-注解处理器
-
-- **编译时处理**：使用注解处理器在编译时读取注解并生成代码或执行其他操作。
-- **运行时处理**：使用反射机制在运行时读取注解并执行相应的操作。
+:::
 
  应用场景
 
@@ -348,6 +354,7 @@ Java 中的注解原理是什么？
 - **运行时行为**：如 JUnit 的 `@Test`、`@Before`。
 
 
+<br/>
 
 你使用过 Java 的反射机制吗？如何应用反射？
 
@@ -385,13 +392,23 @@ Java反射机制是Java语言提供的一种能够在运行时分析类和对象
 
 
 
-### 泛型
+### Java泛型
 
-Java 泛型的作用是什么？
+Java 泛型（generics）是 JDK 5 中引入的一个新特性, 泛型提供了编译时类型安全检测机制，该机制允许开发者在编译时检测到非法的类型。
 
-Java 泛型擦除是什么？
+- 泛型的本质是参数化类型,也就是说所操作的数据类型被指定为一个参数。在使用/调用时传入具体的类型（类型实参）
 
-什么是 Java 泛型的上下界限定符？
+- Java采用 ==类型擦除(Type erasure generics)== 的方式实现泛型，即这个泛型只存在源码中，经过编译之后全部泛型变成Object
+
+::: info 泛型通配/上下界定符
+
+- `？`：任意类型，如果没有明确，那么就是Object以及任意的Java类了
+
+- 上界通配符 `< ? extends E>`：限制泛型可用类型, 表示参数化的类型可能是所指定的类型，或者是此类型的子类。
+
+- 下界通配符 `< ? super E>`：表示参数化的类型可能是所指定的类型，或者是此类型的父类型，直至 Object
+
+:::
 
 
 
@@ -400,37 +417,152 @@ Java 泛型擦除是什么？
 
 ### 异常和错误
 
-Java 中 Exception 和 Error 有什么区别？
+![](../../java/syntax/vx_images/image-20211009131219704.png)
 
-Java 运行时异常和编译时异常之间的区别是什么？
+1. **Java 中 Exception 和 Error 有什么区别？**
+   - `Exception` 表示程序可以捕获和处理的异常情况，
+   - `Error` 表示严重的错误，通常是不可恢复的情况，如虚拟机故障，程序不应尝试处理。
 
-Java 中 final、finally 和 finalize 各有什么区别？
+2. **Java 运行时异常和编译时异常之间的区别是什么？**
+   - 运行时异常（unchecked exceptions）在运行期间发生且不必显式处理，
+   - 编译时异常（checked exceptions）必须在编译前通过 try-catch 或 throws 声明进行处理。
 
+3. **Java 中 final、finally 和 finalize 各有什么区别？**
+   - `final` 关键字用于声明不可修改的变量、方法或类；
+   - `finally` 块总是会在 try-catch 结构后执行，确保清理代码被执行；
+   - `finalize` 方法是在对象垃圾回收前由 JVM 调用，用于资源清理，但已被标记为废弃。
+
+
+在SpringBoot中，使用 `@ControllerAdvice` 和 `@ExceptionHandler` 注解来全局捕获和处理异常：
+
+1. **创建全局异常处理器类**：用 `@ControllerAdvice` 注解的类。
+2. **定义异常处理方法**：在该类中用 `@ExceptionHandler` 注解的方法处理特定异常。
+3. **返回自定义响应**：在处理方法中返回适当的响应给客户端。
 
 
 
 
 ### JDK8新特性
 
-JDK8 有哪些新特性？
+JDK8 有哪些新特性？Java 的 Optional 类是什么？它有什么用？
 
-Java 的 Optional 类是什么？它有什么用？
+::: info JDK8 新特性
+
+#### JDK8 新特性
+
+- **Lambda 表达式**：允许更简洁的代码来实现函数式编程。
+- **Stream API**：提供了一种高效且易于使用的集合数据处理方式。
+- **默认方法和静态方法在接口中**：接口可以包含带实现的方法(默认和静态方法)
+- **日期时间 API (JSR 310)**：引入了新的日期和时间类，如 `LocalDate` 和 `LocalTime`，更加易用且线程安全。
+
+#### Java 的 Optional 类
+
+- `Optional<T>` 是一个容器类，代表一个值存在或不存在，而不是使用 null。
+- 用于避免 NullPointerException，使代码更清晰地表达可能缺失的值，并提供了多种方法来优雅地处理这种情况。
+:::
 
 
 ### Lambda&Stream
 
+[Lambda表达式](/java/syntax/senior/Lambda.html#lambda表达式) 和 [Stream API](/java/syntax/senior/Stream.html#什么是stream)
 
+如何实现类似 Java Stream API 功能的简要思路:
+
+- 链式调用: 每个中间操作（如 filter, map）都应该返回一个新的流对象
+- 惰性求值：使用列表或队列保存一系列待执行的操作（Operation）
+- 并行处理：通过多线程或 Fork/Join 框架实现并发执行，需要注意线程安全问题
 
 
 
 ### SPI机制
+
 什么是 Java 的 SPI（Service Provider Interface）机制？
 
+**Java 的 SPI（Service Provider Interface）机制** 是一种用于发现和加载服务提供者的框架，允许第三方实现或多种实现插件化。通过 SPI，开发者可以在运行时动态地选择和加载特定的服务实现，而无需在代码中硬编码具体的实现类。
+
+SPI 机制是 Java 中实现模块化、可扩展系统的一种强大工具，广泛应用于各种框架和库中，如 JDBC 驱动程序、JAXP 解析器等。
+
+::: details SPI机制
+#### 工作原理
+
+1. **定义接口**：首先定义一个服务接口，该接口将由不同的服务提供者实现。
+2. **配置文件**：服务提供者需要在 JAR 文件的 `META-INF/services` 目录下创建一个以服务接口全限定名为名的文件，并在此文件中列出所有实现类的全限定名。
+3. **加载服务**：使用 `java.util.ServiceLoader` 来加载指定接口的所有可用实现。
+
+#### 使用步骤
+
+- **定义服务接口**：创建一个接口，如 `com.example.spi.MyService`。
+- **实现服务接口**：编写多个实现类，每个类都实现了上述接口。
+- **注册实现类**：在 `META-INF/services/com.example.spi.MyService` 文件中列出所有实现类的全限定名。
+- **加载服务**：通过 `ServiceLoader.load(MyService.class)` 加载并迭代所有实现类的实例。
+
+假设有一个 `Logger` 接口：
+
+```java
+package com.example.spi;
+
+public interface Logger {
+    void log(String message);
+}
+```
+
+两个实现类 `ConsoleLogger` 和 `FileLogger`：
+
+```java
+package com.example.impl;
+
+import com.example.spi.Logger;
+
+public class ConsoleLogger implements Logger {
+    @Override
+    public void log(String message) {
+        System.out.println("CONSOLE: " + message);
+    }
+}
+
+package com.example.impl;
+
+import com.example.spi.Logger;
+
+public class FileLogger implements Logger {
+    @Override
+    public void log(String message) {
+        // 假设这里是写入文件的逻辑
+        System.out.println("FILE: " + message);
+    }
+}
+```
+
+然后，在 `META-INF/services/com.example.spi.Logger` 文件中列出这两个实现类：
+
+```
+com.example.impl.ConsoleLogger
+com.example.impl.FileLogger
+```
+
+最后，使用 `ServiceLoader` 来加载这些实现：
+
+```java
+import com.example.spi.Logger;
+import java.util.ServiceLoader;
+
+public class SpiTest {
+    public static void main(String[] args) {
+        ServiceLoader<Logger> loaders = ServiceLoader.load(Logger.class);
+        for (Logger logger : loaders) {
+            logger.log("Hello, World!");
+        }
+    }
+}
+```
+:::
+
+- **解耦合**：服务使用者和服务提供者之间完全解耦，便于维护和扩展。
+- **灵活性**：支持多实现的灵活加载，适用于插件式架构。
+- **易于测试**：可以轻松替换不同实现进行单元测试。
 
 
-### 调用外部程序
 
-如何在 Java 中调用外部可执行程序或系统命令？
 
 
 

@@ -274,13 +274,20 @@ JVM 垃圾回收调优的主要目标是减少停顿时间、提高吞吐量和�
 
 ### 内存泄漏分析
 进行内存泄漏分析的方法包括：
-
+::: info 内存泄漏分析过程
 1. 生成堆转储文件（Heap Dump）
 ```bash
 ps -ef | grep java  # 或者使用jps, 找到 Java 进程的 PID
 jmap -dump:live,format=b,file=/path/to/heapdump.hprof <pid>
 # jcmd <pid> GC.heap_dump /path/to/heapdump.hprof
 ```
+发生OOM时自动生成 dump 文件 / 自动执行特定脚本或命令：
+```bash
+java -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/path/to/dumps -jar your-application.jar
+
+java -XX:+HeapDumpOnOutOfMemoryError -XX:OnError="sh /path/to/your/script.sh" -jar your-application.jar
+```
+需要注意生成dump文件可能会很大，耗时较长，且可能会包含用户数据等敏感信息
 
 2. 分析堆转储文件（Heap Dump）
 
@@ -294,7 +301,7 @@ jmap -dump:live,format=b,file=/path/to/heapdump.hprof <pid>
   - 确保对象在不再需要时被及时释放。避免不必要的全局变量和静态变量，防止对象长时间持有。
   - 根据应用的特点调整垃圾回收器和堆内存大小。
   - 进行压力测试，模拟高负载场景，验证内存使用情况。
-
+:::
 
 
 ### 频繁FullGC
@@ -307,13 +314,28 @@ jmap -dump:live,format=b,file=/path/to/heapdump.hprof <pid>
 - 永久代（Metaspace）空间不足
 - 系统显式请求: 调用 System.gc() 方法可能会触发 Full GC
 
-::: tip 问题排查
-1. 检查内存使用情况: 生成并分析堆转储文件(Heap dump)，查找是否存在内存泄漏和大对象
+::: tip 问题排查示例
 
-2. 分析 GC 日志: 启用 GC 日志记录，也可以帮助我们详细了解 GC 的行为和频率。
+1. 通过 JVM 提供的工具（如 `jstat, jmap, jvisualvm`）或第三方监控工具（如 `Prometheus + Grafana, GCeasy` 等）来收集和分析垃圾回收的日志。
+重点关注 Full GC 的频率、持续时间和堆内存使用情况。观察是否有明显的 Full GC 频率增加的趋势，以及每次 Full GC 后老年代（Old Generation）的内存占用是否显著下降。
+
+2. 问题定位: 生成并分析堆转储文件（heap dump），找出哪些对象占据了过多的内存空间，是否存在内存泄漏。
+
+3. 检查并优化代码：注意是否有不当的对象生命周期管理、大对象分配或缓存滥用等问题。
+  - 减少不必要的对象创建。
+  - 使用合适的数据结构和算法，避免过度消耗内存。
+  - 对象复用，而不是频繁地创建新实例。
+  - 及时释放不再使用的资源，如关闭流、断开数据库连接等。
+
+4. 重复测试，持续监控
 :::
 
-解决：
+代码中可能会出现的问题及解决方案：
+- ==HashMap缓存未及时清理== : 实现缓存淘汰策略，如 LRU（最近最少使用）、TTL（生存时间），并通过定时任务定期清理过期数据。
+- ==循环内连续创建了多个大对象== : 尽量减少大对象的创建频率，考虑使用对象池模式来重用已存在的对象，或者将大对象拆分为更小的部分逐步处理。
+- ==使用长生命周期引用（如静态集合）== : 为类添加方法来移除不再需要的对象，确保它们可以被正确回收
+
+其他通用解决方案：
 - 调整堆内存大小或调整新生代和老年代的比例: 如果堆内存不足，可以适当增大堆内存。
 - 优化对象的大小，减少大对象的创建，或者增加老年代的内存大小。
 - 增加 Metaspace 的大小, 或者减少类的加载数量
